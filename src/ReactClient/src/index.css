@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS */
+
+.primary-color {
+    color: #467a71;
+}
+
+.hover\:primary-color:hover {
+    color: #467a71;
+    opacity: 0.9;
+}
+
+.primary-bg {
+    background-color: #467a71;
+}
+
+.hover\:primary-bg:hover {
+    background-color: #467a71;
+    opacity: 0.9;
+}
+
+.focus\:primary-color:focus {
+    --tw-ring-color: #467a71;
+}

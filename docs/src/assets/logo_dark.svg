@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 236 236">
+   <style>path{stroke:#000}@media (prefers-color-scheme:dark){path{stroke:#fff}}</style>
+   <style>ellipse{stroke:#000}@media (prefers-color-scheme:dark){ellipse{stroke:#fff}}</style>
+   <g>
+      <ellipse cx="118.088" cy="119.034" rx="111.781" ry="114.5"
+               style="fill-opacity:0;stroke-width:4.51px;"/>
+      <path d="M60.09,176.753l-0.232,-115.438c18.154,7.749 42.561,6.936 42.841,37.78l0,77.622"
+            style="fill:none;stroke-width:20px;"/>
+      <path d="M102.699,141.704l-42.841,-24.397"
+            style="fill:none;stroke-width:20px;"/>
+      <path d="M185.84,61.315c-18.154,7.749 -42.561,6.936 -42.841,37.78l-0,77.622"
+            style="fill:none;stroke-width:20px;"/>
+      <path d="M142.999,141.704l42.841,-24.397"
+            style="fill:none;stroke-width:20px;"/>
+   </g>
+
+</svg>

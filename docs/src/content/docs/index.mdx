@@ -1,0 +1,54 @@
+---
+title: Welcome to Aufy
+description: Authenticated User Friendly
+template: splash
+hero:
+  tagline: Authentication library for ASP.NET Core
+  actions:
+    - text: Documentation
+      link: /manual/introduction
+      icon: document
+      variant: primary
+    - text: FAQ
+      link: /faq
+      icon: puzzle
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Features
+
+<CardGrid stagger>
+	<Card title="Built on top of Identity framework" icon="pencil">
+        Leverage the power of ASP.NET Core Identity framework with pre-built
+        authentication flows.
+	</Card>
+	<Card title="Web API included" icon="add-document">
+        Aufy comes with a set of pre-built API endpoints to handle authentication.
+        Built with minimal API for maximum performance.
+	</Card>
+	<Card title="JWT Bearer authentication" icon="setting">
+        Aufy supports JWT Bearer authentication with refresh tokens.
+	</Card>
+	<Card title="Email and password authentication" icon="open-book">
+        Classic email and password authentication.
+        Password reset and email confirmation flows are included.
+	</Card>
+	<Card title="Social logins" icon="open-book">
+        Social logins with pre-configured Discord and GitHub providers.
+        Add other providers with minimal effort.
+	</Card>
+	<Card title="Emails sending" icon="open-book">
+        Built-in support for sending emails using integration with
+        FluentEmail library. Easily extendable to support other email providers.
+	</Card>
+	<Card title="Easily customizable" icon="open-book">
+        Aufy provides many extension points to customize the library to your needs.
+	</Card>
+	<Card title="Client applications" icon="open-book">
+        Aufy comes with a set of pre-built frontend applications like React and Vue.
+        It's a perfect starting point for your next web application.
+	</Card>
+	<Card title="And more..." icon="open-book">
+	</Card>
+</CardGrid>
