@@ -36,7 +36,8 @@ public class AufySignInJwtBearerHandler(
                 Expires = refreshExpiresAt,
             });
         
-        if (aufyOptions.Value.SaveAccessTokenInCookie)
+        var useCookie = properties?.GetParameter<bool?>("useCookie") ?? false;
+        if (useCookie)
         {
             Context.Response.Cookies.Append(
                 AufyAuthSchemeDefaults.AccessTokenCookieName,
@@ -52,7 +53,7 @@ public class AufySignInJwtBearerHandler(
         
         var accessTokenResponse = new AccessTokenResponse
         {
-            AccessToken = token,
+            AccessToken = useCookie ? null : token,
             ExpiresIn = (long)(expiresAt - DateTime.UtcNow).TotalSeconds,
         };
 

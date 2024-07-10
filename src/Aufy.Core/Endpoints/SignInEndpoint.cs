@@ -19,9 +19,10 @@ public class SignInEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
     {
         return builder.MapPost("/signin", async Task<Results<SignInHttpResult, ProblemHttpResult, EmptyHttpResult>>
             ([FromBody, Required] SignInRequest req,
+                [FromQuery] bool? useCookie,
                 HttpContext context,
                 [FromServices] IOptions<AufyOptions> options,
-                [FromServices] SignInManager<TUser> signInManager,
+                [FromServices] AufySignInManager<TUser> signInManager,
                 [FromServices] UserManager<TUser> userManager,
                 [FromServices] IServiceProvider serviceProvider,
                 [FromServices] ILogger<SignInEndpoint<TUser>> logger) =>
@@ -43,7 +44,7 @@ public class SignInEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
                     return TypedResults.Problem(SignInResult.Failed.ToValidationProblem());
                 }
                 
-                signInManager.AuthenticationScheme = AufyAuthSchemeDefaults.BearerSignInScheme;
+                signInManager.UseCookie = useCookie ?? false;
                 var result = await signInManager.PasswordSignInAsync(
                     user, req.Password, isPersistent: false, lockoutOnFailure: true);
                 

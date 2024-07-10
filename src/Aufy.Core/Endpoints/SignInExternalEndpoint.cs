@@ -17,8 +17,9 @@ public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : AufyUse
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {
         return builder.MapPost("/signin/external",
-                async Task<Results<SignInHttpResult, UnauthorizedHttpResult>> (
-                    [FromServices] SignInManager<TUser> manager,
+                async Task<Results<EmptyHttpResult, UnauthorizedHttpResult>> (
+                    [FromQuery] bool? useCookie,
+                    [FromServices] AufySignInManager<TUser> manager,
                     [FromServices] ILogger<SignInExternalEndpoint<TUser>> logger,
                     HttpContext context) =>
                 {
@@ -33,16 +34,15 @@ public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : AufyUse
                     }
                     
                     var user = await manager.UserManager.FindByLoginAsync(context.User.Identity.AuthenticationType, providerKey);
-
                     if (user == null)
                     {
                         return TypedResults.Unauthorized();
                     }
 
-                    var userPrincipal = await manager.CreateUserPrincipalAsync(user);
-                    return TypedResults.SignIn(
-                            userPrincipal,
-                            authenticationScheme: AufyAuthSchemeDefaults.BearerSignInScheme);
+                    manager.UseCookie = useCookie ?? false;
+                    await manager.SignInAsync(user, new AuthenticationProperties(), context.User.Identity.AuthenticationType);
+                    
+                    return TypedResults.Empty;
                 })
             .RequireAuthorization(b =>
             {

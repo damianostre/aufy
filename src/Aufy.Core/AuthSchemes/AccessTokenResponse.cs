@@ -8,7 +8,7 @@ public class AccessTokenResponse
     public string TokenType { get; } = "Bearer";
     
     [JsonPropertyName("access_token")]
-    public required string AccessToken { get; set; }
+    public string? AccessToken { get; set; }
     
     [JsonPropertyName("expires_in")]
     public long ExpiresIn { get; set; }

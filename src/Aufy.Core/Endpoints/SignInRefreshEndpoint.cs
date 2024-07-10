@@ -18,6 +18,7 @@ public class SignInRefreshEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
         return builder.MapPost(
                 "/signin/refresh",
                 async Task<Results<SignInHttpResult, UnauthorizedHttpResult>> ( 
+                    [FromQuery] bool? useCookie,
                     [FromServices] UserManager<TUser> manager,
                     [FromServices] IRefreshTokenManager refreshTokenManager, 
                     HttpContext context) =>

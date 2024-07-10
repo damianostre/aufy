@@ -17,8 +17,6 @@ public class AufyOptions
     public bool EnableExternalProvidersFlow { get; set; } = true;
     public bool EnableSignUp { get; set; } = true;
     
-    public bool SaveAccessTokenInCookie { get; set; } = false;
-    
     public ClientAppOptions ClientApp { get; set; } = new();
     public AufyJwtBearerOptions JwtBearer { get; set; } = new();
     public AufyProviders Providers { get; set; } = new();

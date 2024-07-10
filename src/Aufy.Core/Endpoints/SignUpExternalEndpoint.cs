@@ -20,9 +20,10 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {
         return builder.MapPost("/signup/external",
-                async Task<Results<SignInHttpResult, BadRequest, ProblemHttpResult, UnauthorizedHttpResult>>
+                async Task<Results<SignInHttpResult, BadRequest, ProblemHttpResult, UnauthorizedHttpResult, EmptyHttpResult>>
                 ([FromBody] TModel req,
-                    [FromServices] SignInManager<TUser> signInManager,
+                    [FromQuery] bool? useCookie,
+                    [FromServices] AufySignInManager<TUser> signInManager,
                     [FromServices] UserManager<TUser> userManager,
                     [FromServices] ILogger<SignUpExternalEndpoint<TUser, TModel>> logger,
                     [FromServices] IOptions<AufyOptions> options,
@@ -120,10 +121,10 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                         await events.UserCreatedAsync(req, context.Request, user);
                     }
 
-                    var userPrincipal = await signInManager.CreateUserPrincipalAsync(user);
-                    return TypedResults.SignIn(
-                        userPrincipal,
-                        authenticationScheme: AufyAuthSchemeDefaults.BearerSignInScheme);
+                    signInManager.UseCookie = useCookie ?? false;
+                    await signInManager.SignInAsync(user, new AuthenticationProperties(), claimsPrincipal.Identity.AuthenticationType);
+                    
+                    return TypedResults.Empty;
                 })
             .AddEndpointFilter<ValidationEndpointFilter<TModel>>()
             .RequireAuthorization(b =>

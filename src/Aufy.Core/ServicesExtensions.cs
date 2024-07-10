@@ -86,7 +86,7 @@ public static class ServicesExtensions
 
         var identityBuilder = services
             .AddIdentityCore<TUser>()
-            .AddSignInManager()
+            .AddSignInManager<AufySignInManager<TUser>>()
             .AddRoles<IdentityRole>()
             .AddDefaultTokenProviders();
 
