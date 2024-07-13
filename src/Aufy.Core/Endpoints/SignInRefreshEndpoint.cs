@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Aufy.Core.AuthSchemes;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -17,10 +18,11 @@ public class SignInRefreshEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
     {
         return builder.MapPost(
                 "/signin/refresh",
-                async Task<Results<SignInHttpResult, UnauthorizedHttpResult>> ( 
+                async Task<Results<SignInHttpResult, UnauthorizedHttpResult, EmptyHttpResult>> ( 
                     [FromQuery] bool? useCookie,
                     [FromServices] UserManager<TUser> manager,
-                    [FromServices] IRefreshTokenManager refreshTokenManager, 
+                    [FromServices] IRefreshTokenManager refreshTokenManager,
+                    [FromServices] AufySignInManager<TUser> signInManager,
                     HttpContext context) =>
                 {
                     var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -42,8 +44,10 @@ public class SignInRefreshEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
                         return TypedResults.Unauthorized();
                     }
 
-                    return TypedResults.SignIn(context.User,
-                        authenticationScheme: AufyAuthSchemeDefaults.BearerSignInScheme);
+                    signInManager.UseCookie = useCookie ?? false;
+                    await signInManager.SignInAsync(user, new AuthenticationProperties(), context.User.Identity.AuthenticationType);
+                    
+                    return TypedResults.Empty;
                 })
             .RequireAuthorization(b =>
             {

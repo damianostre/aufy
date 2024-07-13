@@ -19,6 +19,12 @@ Refresh token endpoint with cookie-based authentication.
 ### Request body
 -
 
+### Query parameters
+
+| Name        | Type      | Description                                           |
+|:------------|:----------|:------------------------------------------------------|
+| `usecookie` | `boolean` | Use cookie to store access token. Default is `false`. |
+
 ### Response body
 
 | Name           | Type     | Description                       |
@@ -32,4 +38,4 @@ Refresh token endpoint with cookie-based authentication.
 | Name                | Type     | Description                                                                                  |
 |:--------------------|:---------|:---------------------------------------------------------------------------------------------|
 | `Aufy.RefreshToken` | `string` | HTTP only cookie with refresh token.                                                         |
-| `Aufy.AccessToken`  | `string` | HTTP only cookie with access token. Set only if `SaveAccessTokenInCookie` option is enabled. |
+| `Aufy.AccessToken`  | `string` | HTTP only cookie with access token. Set only if `usecookie` query parameter is `true`.       |

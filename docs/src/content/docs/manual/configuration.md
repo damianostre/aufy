@@ -31,19 +31,6 @@ builder.Services
     ...
 ```
 
-### Save Access Token in Cookie
-
-By default, Aufy does not save access token in cookie. You can change it by configuring `SaveAccessTokenInCookie` property in `AufyOptions`.
-
-```csharp title="Program.cs"
-builder.Services
-    .AddAufy<AufyUser>(builder.Configuration, options =>
-    {
-        options.SaveAccessTokenInCookie = true;
-    })
-    ...
-```
-
 ### Default User Role
 
 By default, Aufy creates a new user without any roles.

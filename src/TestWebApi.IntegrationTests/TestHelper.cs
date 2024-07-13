@@ -27,7 +27,7 @@ public static class TestHelper
         return await cli.Request(path).PostJsonAsync(body);
     }
     
-    public static async Task<(string, FlurlCookie)> Given_user_signin_with_token(this FlurlClient cli, string email, string password)
+    public static async Task<(string, FlurlCookie)> Given_user_signin(this FlurlClient cli, string email, string password)
     {
         var res = await cli
             .Request("auth", "signin")

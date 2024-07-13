@@ -21,6 +21,12 @@ Returns access token in the response body and refresh token as HTTP only cookie 
 |:-----|:-----|:------------|
 | -    |      |             |
 
+### Query parameters
+
+| Name        | Type      | Description                                           |
+|:------------|:----------|:------------------------------------------------------|
+| `usecookie` | `boolean` | Use cookie to store access token. Default is `false`. |
+
 ### Response body
 
 | Name           | Type     | Description                       |
@@ -31,8 +37,9 @@ Returns access token in the response body and refresh token as HTTP only cookie 
 
 ### Response Cookies
 
-| Name                | Type     | Description                          |
-|:--------------------|:---------|:-------------------------------------|
-| `Aufy.RefreshToken` | `string` | HTTP only cookie with refresh token. |
+| Name                | Type     | Description                                                                            |
+|:--------------------|:---------|:---------------------------------------------------------------------------------------|
+| `Aufy.RefreshToken` | `string` | HTTP only cookie with refresh token.                                                   |
+| `Aufy.AccessToken`  | `string` | HTTP only cookie with access token. Set only if `usecookie` query parameter is `true`. |
 
 *Request body can be modified to include additional fields. See [Sign up customizations](https://aufy.dev/docs/docs/signup-customizations) for more information.

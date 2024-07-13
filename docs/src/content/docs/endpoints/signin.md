@@ -21,6 +21,12 @@ Email and password sign in endpoint. Returns access token in the response body a
 | `Email`    | `string` |             |
 | `Password` | `string` |             |
 
+### Query parameters
+
+| Name        | Type      | Description                                           |
+|:------------|:----------|:------------------------------------------------------|
+| `usecookie` | `boolean` | Use cookie to store access token. Default is `false`. |
+
 ### Response body
 
 | Name           | Type     | Description                       |
@@ -31,7 +37,7 @@ Email and password sign in endpoint. Returns access token in the response body a
 
 ### Response Cookies
 
-| Name                | Type     | Description                                                                                  |
-|:--------------------|:---------|:---------------------------------------------------------------------------------------------|
-| `Aufy.RefreshToken` | `string` | HTTP only cookie with refresh token.                                                         |
-| `Aufy.AccessToken`  | `string` | HTTP only cookie with access token. Set only if `SaveAccessTokenInCookie` option is enabled. |
+| Name                | Type     | Description                                                                            |
+|:--------------------|:---------|:---------------------------------------------------------------------------------------|
+| `Aufy.RefreshToken` | `string` | HTTP only cookie with refresh token.                                                   |
+| `Aufy.AccessToken`  | `string` | HTTP only cookie with access token. Set only if `usecookie` query parameter is `true`. |
