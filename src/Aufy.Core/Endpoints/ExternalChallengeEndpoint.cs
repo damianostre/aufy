@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Aufy.Core.Endpoints;
 
-public class ExternalChallengeEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
+public class ExternalChallengeEndpoint<TUser> : IAuthEndpoint where TUser : IAufyUser
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {

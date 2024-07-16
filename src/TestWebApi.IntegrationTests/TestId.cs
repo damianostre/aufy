@@ -1,4 +1,4 @@
-﻿namespace Aufy.Server.IntegrationTests;
+﻿namespace TestWebApi.IntegrationTests;
 
 public class TestId
 {

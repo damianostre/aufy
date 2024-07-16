@@ -4,7 +4,7 @@
 /// Represents an email sender for Aufy
 /// </summary>
 /// <typeparam name="TUser"></typeparam>
-public interface IAufyPasswordResetEmailSender<TUser> where TUser: AufyUser
+public interface IAufyPasswordResetEmailSender<TUser> where TUser: IAufyUser
 {
     /// <summary>
     /// Sends a password reset email to the user

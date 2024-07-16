@@ -43,7 +43,7 @@ public class MyWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Development");
         builder.ConfigureServices(services =>
         {
-            services.AddScoped<IAufyEmailSenderManager<AufyUser>, TestAufyEmailSenderManager>();
+            services.AddScoped<IAufyEmailSenderManager<TestUser>, TestAufyEmailSenderManager>();
             services.Configure<AufyOptions>(o =>
             {
                 o.ClientApp.BaseUrl = null;

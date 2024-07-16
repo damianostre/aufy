@@ -3,6 +3,7 @@ using Aufy.Core.EmailSender;
 using FluentEmail.Core.Defaults;
 using FluentEmail.Core.Interfaces;
 using FluentEmail.MailKitSmtp;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -14,7 +15,7 @@ public static class AufyServiceBuilderExtensions
 {
     public static AufyServiceBuilder<TUser> AddFluentEmail<TUser>(
         this AufyServiceBuilder<TUser> builder,
-        bool registerMailKitSender = true) where TUser : AufyUser, new()
+        bool registerMailKitSender = true) where TUser : IdentityUser, IAufyUser, new()
     {
         if (builder.Configuration.GetSection(FluentEmailOptions.SectionName).Exists())
         {

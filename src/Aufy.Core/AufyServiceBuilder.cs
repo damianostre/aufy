@@ -12,7 +12,7 @@ namespace Aufy.Core;
 /// Can be used to configure the services and endpoints of Aufy.
 /// </summary>
 /// <typeparam name="TUser"></typeparam>
-public class AufyServiceBuilder<TUser> where TUser : AufyUser, new()
+public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, new()
 {
     public AufyOptions AufyOptions { get; set; }
     public IdentityBuilder IdentityBuilder { get; }

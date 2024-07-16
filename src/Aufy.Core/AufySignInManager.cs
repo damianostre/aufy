@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 
 namespace Aufy.Core;
 
-public class AufySignInManager<TUser> : SignInManager<TUser> where TUser : AufyUser
+public class AufySignInManager<TUser> : SignInManager<TUser> where TUser : class, IAufyUser
 {
     public bool UseCookie { get; set; }
     

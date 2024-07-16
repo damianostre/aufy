@@ -12,7 +12,7 @@ using SignInResult = Microsoft.AspNetCore.Mvc.SignInResult;
 
 namespace Aufy.Core.Endpoints;
 
-public class SignInRefreshEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
+public class SignInRefreshEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, IAufyUser
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {

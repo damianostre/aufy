@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using Aufy.Server.IntegrationTests;
 using FluentAssertions;
 using Flurl.Http;
 using Microsoft.AspNetCore.Mvc.Testing;

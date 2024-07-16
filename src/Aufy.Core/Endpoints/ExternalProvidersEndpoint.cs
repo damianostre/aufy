@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Aufy.Core.Endpoints;
 
-public class ExternalProvidersEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
+public class ExternalProvidersEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, IAufyUser
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {

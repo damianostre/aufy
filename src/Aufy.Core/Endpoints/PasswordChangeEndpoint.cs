@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Aufy.Core.Endpoints;
 
-public class PasswordChangeEndpoint<TUser> : IAccountEndpoint where TUser : AufyUser
+public class PasswordChangeEndpoint<TUser> : IAccountEndpoint where TUser : IdentityUser, IAufyUser
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {

@@ -11,7 +11,7 @@ public class EmailConfirmationEmailSender<TUser>(
     IOptions<FluentEmailOptions> fluentEmailOptions,
     AufyFluentEmailFactory emailFactory,
     ILogger<EmailConfirmationEmailSender<TUser>> logger) : IAufyEmailConfirmationEmailSender<TUser>
-    where TUser : AufyUser
+    where TUser : IdentityUser, IAufyUser
 {
     protected virtual object PrepareEmailConfirmationModel(IdentityUser user, string confirmationLink)
     {

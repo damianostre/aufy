@@ -26,7 +26,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services
-    .AddAufy<AufyUser>(builder.Configuration)
+    .AddAufy<TestUser>(builder.Configuration)
     .AddProvider(GitHubAuthenticationDefaults.AuthenticationScheme, (auth, options) =>
     {
         auth.AddGitHub(o => o.Configure(GitHubAuthenticationDefaults.AuthenticationScheme, options));
@@ -36,7 +36,7 @@ builder.Services
         auth.AddDiscord(o => o.Configure(DiscordAuthenticationDefaults.AuthenticationScheme, options));
     })
     .AddDefaultCorsPolicy()
-    .AddEntityFrameworkStore<ApplicationDbContext, AufyUser>()
+    .AddEntityFrameworkStore<ApplicationDbContext, TestUser>()
     .AddFluentEmail();
 
 
@@ -68,7 +68,7 @@ app.UseAuthorization();
 app.MapAufyEndpoints(c =>
 {
     c.ConfigureAuthRouteGroup(routeGroupBuilder => { routeGroupBuilder.WithDescription("CUSTOM DESC - Auth routes"); });
-    c.ConfigureRoute<SignUpEndpoint<AufyUser, SignUpRequest>>(r =>
+    c.ConfigureRoute<SignUpEndpoint<TestUser, SignUpRequest>>(r =>
         r.WithDescription("CUSTOM DESC - Sign up a new user with email and password"));
 });
 

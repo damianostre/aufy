@@ -4,7 +4,7 @@
 /// Represents an email sender for Aufy
 /// </summary>
 /// <typeparam name="TUser"></typeparam>
-public interface IAufyEmailConfirmationEmailSender<in TUser> where TUser: AufyUser
+public interface IAufyEmailConfirmationEmailSender<in TUser> where TUser: IAufyUser
 {
     /// <summary>
     /// Sends an email confirmation to the user
