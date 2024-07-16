@@ -66,11 +66,18 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                     var email = claimsPrincipal.FindFirst(ClaimTypes.Email);
                     var name = claimsPrincipal.FindFirst(ClaimTypes.Name);
 
-                    var user = new TUser
+                    var existingUser = email?.Value is not null ? await userManager.FindByEmailAsync(email.Value) : null;
+                    if (existingUser is not null && options.Value.AutoAccountLinking is false)
+                    {
+                        logger.LogInformation("User {UserId} already has an account", claimsPrincipal.Identity.Name);
+                        return TypedResults.Problem("There was an error creating user");
+                    }
+                    
+                    var user = existingUser ?? new TUser
                     {
                         UserName = name?.Value,
                         Email = email?.Value,
-                        EmailConfirmed = true,
+                        EmailConfirmed = email?.Value is not null,
                     };
 
                     var events = serviceProvider.GetService<ISignUpExternalEndpointEvents<TUser, TModel>>();
@@ -83,11 +90,15 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                         }
                     }
 
-                    var result = await userManager.CreateAsync(user);
-                    if (!result.Succeeded)
+                    IdentityResult result;
+                    if (existingUser is null)
                     {
-                        logger.LogError("Error creating user: {Email}. Result: {Result}", user.Email, result);
-                        return TypedResults.Problem(result.ToValidationProblem());
+                        result = await userManager.CreateAsync(user);
+                        if (!result.Succeeded)
+                        {
+                            logger.LogError("Error creating user: {Email}. Result: {Result}", user.Email, result);
+                            return TypedResults.Problem(result.ToValidationProblem());
+                        }
                     }
 
                     var schemes = await signInManager.GetExternalAuthenticationSchemesAsync();

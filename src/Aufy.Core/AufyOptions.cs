@@ -12,6 +12,7 @@ public class AufyOptions
     public string AuthApiBasePath { get; set; } = "/api/auth";
     public string AccountApiBasePath { get; set; } = "/api/account";
     public string[] DefaultRoles { get; set; } = [];
+    public bool AutoAccountLinking { get; set; } = true;
 
     public bool EnableEmailPasswordFlow { get; set; } = true;
     public bool EnableExternalProvidersFlow { get; set; } = true;
