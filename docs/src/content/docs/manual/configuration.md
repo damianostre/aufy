@@ -30,6 +30,23 @@ builder.Services
     })
     ...
 ```
+### Automatic Account Linking
+
+By default, Aufy tries to automatically link the user account with the external provider account if the email address is the same. 
+This allows the user to sign in with the same account regardless of the authentication method used. 
+Although this is a convenient feature, there are some security concerns, and it may not be suitable for all applications.
+
+If you want to disable this feature, you can set `AutoAccountLinking` to `false`.
+
+```csharp title="Program.cs"
+builder.Services
+    .AddAufy<AufyUser>(builder.Configuration, options =>
+    {
+        options.AutoAccountLinking = false;
+    })
+    ...
+```
+
 
 ### Default User Role
 
