@@ -29,18 +29,42 @@ Currently only Entity Framework Core implementation is available, but you can us
 dotnet add package Aufy.EntityFrameworkCore
 ```
 
-### Create DbContext
+### Create or update your user class
 
-Add a new DbContext class that inherits from `AufyDbContext`.
+Create a new user class that extends `IdentityUser` and implements `IAufyUser` interface.
+
+```csharp title="MyUser.cs"
+public class MyUser: IdentityUser, IAufyUser
+{
+    public string MyProperty { get; set; }
+}
+```
+
+If you already have a user class that extends `IdentityUser`, you can just implement `IAufyUser` interface.
+
+### Create or update you DbContext
+
+Create a new DbContext that extends one of the IdentityDbContext classes `IdentityDbContext<TUser, ...>` where `TUser` is your user class.
+DbContext should also implement `IAufyDbContext<TUser>` interface.
+
+Next override `OnModelCreating` method and apply Aufy model configuration using `builder.ApplyAufyModel()` extension method.
 
 ```csharp title="MyAuthDbContext.cs"
-public class MyAuthDbContext : AufyDbContext<AufyUser>
+public class MyAuthDbContext(DbContextOptions<MyAuthDbContext> options)
+    : IdentityDbContext<MyUser>(options), IAufyDbContext<MyUser>
 {
-    public MyAuthDbContext(DbContextOptions<MyAuthDbContext> options) : base(options)
+    public DbSet<AufyRefreshToken> RefreshTokens { get; set; }
+    
+    protected override void OnModelCreating(ModelBuilder builder)
     {
+        base.OnModelCreating(builder);
+        
+        builder.ApplyAufyModel();
     }
 }
 ```
+
+If you already have a DbContext that extends `IdentityDbContext`, you can just implement `IAufyDbContext<TUser>` interface and apply Aufy model configuration.
 
 ### Register your DbContext in DI container
 

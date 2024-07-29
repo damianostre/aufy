@@ -6,7 +6,7 @@ sidebar:
 
 ### Identity user
 
-Aufy requires an Identity User class that extends `IdentityUser` and implements `IAufyUser` interface. For simplicty and some security reasons other than IdentityUser<string> (same as IdentityUser) are not supported.
+Aufy requires an Identity User class that extends `IdentityUser` and implements `IAufyUser` interface. For simplicity and some security reasons other than IdentityUser<string> (same as IdentityUser) are not supported.
 
 ```csharp title="MyUser.cs"
 
@@ -27,7 +27,7 @@ The best option to do it is to add an optional parameter to `AddAufy` function
 
 ```csharp title="Program.cs"
 builder.Services
-    .AddAufy<AufyUser>(builder.Configuration, options =>
+    .AddAufy<MyUser>(builder.Configuration, options =>
     {
         options.AccountApiBasePath = "/my-account";
         options.AuthApiBasePath = "/my-auth";
@@ -44,7 +44,7 @@ If you want to disable this feature, you can set `AutoAccountLinking` to `false`
 
 ```csharp title="Program.cs"
 builder.Services
-    .AddAufy<AufyUser>(builder.Configuration, options =>
+    .AddAufy<MyUser>(builder.Configuration, options =>
     {
         options.AutoAccountLinking = false;
     })
@@ -59,7 +59,7 @@ You can change it by configuring `DefaultRoles` property in `AufyOptions`.
 
 ```csharp title="Program.cs"
 builder.Services
-    .AddAufy<AufyUser>(builder.Configuration, options =>
+    .AddAufy<MyUser>(builder.Configuration, options =>
     {
         options.DefaultRoles = new[] { "MyRole" };
     })
