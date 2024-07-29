@@ -4,12 +4,16 @@ sidebar:
     order: 3
 ---
 
-### Custom Identity user
+### Identity user
 
-Aufy come with a default user model `AufyUser`. If you want to use custom user model, you can inherit from `AufyUser` and add your own properties.
+Aufy requires an Identity User class that extends `IdentityUser` and implements `IAufyUser` interface. For simplicty and some security reasons other than IdentityUser<string> (same as IdentityUser) are not supported.
 
 ```csharp title="MyUser.cs"
-public class MyUser : AufyUser
+
+Example user class:
+
+```csharp title="MyUser.cs"
+public class MyUser: IdentityUser, IAufyUser
 {
     public string MyProperty { get; set; }
 }
