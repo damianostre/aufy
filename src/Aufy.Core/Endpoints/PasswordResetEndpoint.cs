@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Aufy.Core.Endpoints;
 
-public class PasswordResetEndpoint<TUser> : IAccountEndpoint where TUser : AufyUser
+public class PasswordResetEndpoint<TUser> : IAccountEndpoint where TUser : IdentityUser, IAufyUser
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {

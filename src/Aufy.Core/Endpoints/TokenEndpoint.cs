@@ -14,7 +14,7 @@ using Microsoft.Extensions.Options;
 
 namespace Aufy.Core.Endpoints;
 
-public class TokenEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
+public class TokenEndpoint<TUser> : IAuthEndpoint where TUser : class, IAufyUser
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {

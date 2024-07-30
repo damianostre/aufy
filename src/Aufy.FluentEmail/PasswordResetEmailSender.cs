@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Aufy.Core;
 using Aufy.Core.EmailSender;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -10,7 +11,7 @@ public class PasswordResetEmailSender<TUser>(
     IOptions<FluentEmailOptions> fluentEmailOptions,
     AufyFluentEmailFactory emailFactory,
     ILogger<EmailConfirmationEmailSender<TUser>> logger) : IAufyPasswordResetEmailSender<TUser>
-    where TUser : AufyUser
+    where TUser : IdentityUser, IAufyUser
 {
     protected virtual object PrepareForgotPasswordModel(TUser user, string confirmationLink)
     {

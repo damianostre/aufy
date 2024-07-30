@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Aufy.Core.Endpoints;
 
-public class SignOutEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
+public class SignOutEndpoint<TUser> : IAuthEndpoint where TUser : IAufyUser
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {

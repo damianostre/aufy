@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Aufy.Core.Endpoints;
 
-public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
+public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, IAufyUser
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {

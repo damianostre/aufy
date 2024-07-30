@@ -10,7 +10,7 @@ public class AufyEmailSenderManager<TUser>(
     IOptions<IdentityOptions> identityOptions,
     ILogger<AufyEmailSenderManager<TUser>> logger)
     : IAufyEmailSenderManager<TUser>
-    where TUser : AufyUser
+    where TUser : IdentityUser, IAufyUser
 {
     private readonly IdentityOptions _identityOptions = identityOptions.Value;
     
@@ -54,7 +54,7 @@ public class AufyEmailSenderManager<TUser>(
     }
 }
 
-public interface IAufyEmailSenderManager<T> where T: AufyUser
+public interface IAufyEmailSenderManager<T> where T: IAufyUser
 {
     Task SendEmailConfirmationAsync(T user, string confirmationLink);
     Task SendPasswordResetAsync(T user, string resetLink);

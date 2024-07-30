@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 namespace Aufy.Core.Endpoints;
 
-public class PasswordForgotEndpoint<TUser> : IAccountEndpoint where TUser : AufyUser
+public class PasswordForgotEndpoint<TUser> : IAccountEndpoint where TUser : IdentityUser, IAufyUser
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {

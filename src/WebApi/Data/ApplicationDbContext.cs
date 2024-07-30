@@ -1,12 +1,19 @@
 ﻿using Aufy.Core;
 using Aufy.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace WebApi.Data;
 
-public class ApplicationDbContext : AufyDbContext<AufyUser>
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    : IdentityDbContext<MyUser>(options), IAufyDbContext<MyUser>
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    public DbSet<AufyRefreshToken> RefreshTokens { get; set; }
+    
+    protected override void OnModelCreating(ModelBuilder builder)
     {
+        base.OnModelCreating(builder);
+        
+        builder.ApplyAufyModel();
     }
 }

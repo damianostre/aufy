@@ -15,7 +15,7 @@ using Microsoft.Extensions.Options;
 namespace Aufy.Core.Endpoints;
 
 public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
-    where TModel : SignUpExternalRequest where TUser : AufyUser, new()
+    where TModel : SignUpExternalRequest where TUser : IdentityUser, IAufyUser, new()
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {
@@ -152,7 +152,7 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
 /// <typeparam name="TUser"></typeparam>
 /// <typeparam name="TModel"></typeparam>
 public interface ISignUpExternalEndpointEvents<TUser, TModel>
-    where TModel : SignUpExternalRequest where TUser : AufyUser, new()
+    where TModel : SignUpExternalRequest where TUser : IAufyUser, new()
 {
     /// <summary>
     /// Called when a user is being created. <br/>

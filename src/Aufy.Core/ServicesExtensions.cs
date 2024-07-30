@@ -26,7 +26,7 @@ public static class ServicesExtensions
     /// <exception cref="Exception"></exception>
     public static AufyServiceBuilder<TUser> AddAufy<TUser>(
         this IServiceCollection services, IConfiguration configuration, Action<AufyOptions>? configureOptions = null)
-        where TUser : AufyUser, new()
+        where TUser : IdentityUser, IAufyUser, new()
     {
         var opts = configuration.GetSection(AufyOptions.SectionPath).Get<AufyOptions>();
         if (opts is null)

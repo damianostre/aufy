@@ -13,7 +13,7 @@ using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace Aufy.Core.Endpoints;
 
-public class SignInEndpoint<TUser> : IAuthEndpoint where TUser : AufyUser
+public class SignInEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, IAufyUser
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {
@@ -83,7 +83,7 @@ public class SignInRequest
 /// Extension point for the SignInEndpoint.
 /// </summary>
 /// <typeparam name="TUser"></typeparam>
-public interface ISignInEndpointEvents<in TUser> where TUser : AufyUser
+public interface ISignInEndpointEvents<in TUser> where TUser : IAufyUser
 {
     Task SignInSucceededAsync(TUser user, HttpContext context);
     

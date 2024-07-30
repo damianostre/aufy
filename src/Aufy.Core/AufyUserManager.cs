@@ -4,7 +4,7 @@ namespace Aufy.Core;
 
 public class AufyUserManager<TUser>(
     UserManager<TUser> userManager, SignInManager<TUser> signInManager) : IAufyUserManager
-    where TUser : AufyUser
+    where TUser : class, IAufyUser
 {
     public async Task<bool> UserWithLoginExistsAsync(string provider, string providerKey)
     {
