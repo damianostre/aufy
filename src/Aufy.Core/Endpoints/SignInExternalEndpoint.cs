@@ -9,38 +9,65 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Aufy.Core.Endpoints;
 
-public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, IAufyUser
+public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, IAufyUser, new()
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {
         return builder.MapPost("/signin/external",
-                async Task<Results<EmptyHttpResult, UnauthorizedHttpResult>> (
+                async Task<Results<EmptyHttpResult, UnauthorizedHttpResult, ProblemHttpResult>> (
                     [FromQuery] bool? useCookie,
-                    [FromServices] AufySignInManager<TUser> manager,
+                    [FromServices] AufySignInManager<TUser> signInManager,
                     [FromServices] ILogger<SignInExternalEndpoint<TUser>> logger,
-                    HttpContext context) =>
+                    [FromServices] UserManager<TUser> userManager,
+                    HttpContext context,
+                    ClaimsPrincipal claimsPrincipal,
+                    IOptions<AufyOptions> options,
+                    IServiceProvider serviceProvider) =>
                 {
                     await context.SignOutAsync(AufyAuthSchemeDefaults.SignInExternalScheme);
                     await context.SignOutAsync(AufyAuthSchemeDefaults.SignUpExternalScheme);
 
-                    var providerKey = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    if (context.User.Identity?.AuthenticationType is null || providerKey is null)
+                    var providerKey = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (claimsPrincipal.Identity?.AuthenticationType is null || providerKey is null)
                     {
                         logger.LogInformation("User not authenticated or missing name claim: {Claims}", context.User.Claims);
                         return TypedResults.Unauthorized();
                     }
-                    
-                    var user = await manager.UserManager.FindByLoginAsync(context.User.Identity.AuthenticationType, providerKey);
+
+                    var user = await signInManager.UserManager.FindByLoginAsync(claimsPrincipal.Identity.AuthenticationType, providerKey);
                     if (user == null)
                     {
-                        return TypedResults.Unauthorized();
+                        var (newUser, problem) = await SignUpExternalEndpoint<TUser, SignUpExternalRequest>
+                            .CreateUserAsync(
+                                providerKey,
+                                context,
+                                new SignUpExternalRequest(),
+                                claimsPrincipal,
+                                serviceProvider,
+                                userManager,
+                                signInManager,
+                                options,
+                                logger);
+
+                        if (problem is not null)
+                        {
+                            return problem;
+                        }
+
+                        if (newUser is null)
+                        {
+                            return TypedResults.Problem("There was an error creating user");
+                        }
+
+                        user = newUser;
                     }
 
-                    manager.UseCookie = useCookie ?? false;
-                    await manager.SignInAsync(user, new AuthenticationProperties(), context.User.Identity.AuthenticationType);
+                    signInManager.UseCookie = useCookie ?? false;
+                    await signInManager.SignInAsync(user, new AuthenticationProperties(), claimsPrincipal.Identity.AuthenticationType);
                     
                     return TypedResults.Empty;
                 })

@@ -20,7 +20,8 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {
         return builder.MapPost("/signup/external",
-                async Task<Results<SignInHttpResult, BadRequest, ProblemHttpResult, UnauthorizedHttpResult, EmptyHttpResult>>
+                async Task<Results<SignInHttpResult, BadRequest, ProblemHttpResult, UnauthorizedHttpResult,
+                    EmptyHttpResult>>
                 ([FromBody] TModel req,
                     [FromQuery] bool? useCookie,
                     [FromServices] AufySignInManager<TUser> signInManager,
@@ -31,15 +32,10 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                     ClaimsPrincipal claimsPrincipal,
                     HttpContext context) =>
                 {
+                    await context.SignOutAsync(AufyAuthSchemeDefaults.SignInExternalScheme);
                     await context.SignOutAsync(AufyAuthSchemeDefaults.SignUpExternalScheme);
 
-                    if (claimsPrincipal.Identity?.IsAuthenticated != true)
-                    {
-                        logger.LogInformation("User {UserId} is not authenticated", claimsPrincipal.Identity?.Name);
-                        return TypedResults.Unauthorized();
-                    }
-
-                    if (claimsPrincipal.Identity.AuthenticationType is null)
+                    if (claimsPrincipal.Identity?.AuthenticationType is null)
                     {
                         logger.LogInformation("User {UserId} has no authentication type",
                             claimsPrincipal.Identity?.Name);
@@ -52,10 +48,10 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                         throw new("NameIdentifier claim is missing");
                     }
 
-                    var login = await userManager.FindByLoginAsync(
+                    var loginUser = await userManager.FindByLoginAsync(
                         claimsPrincipal.Identity.AuthenticationType,
                         providerKey);
-                    if (login is not null)
+                    if (loginUser is not null)
                     {
                         logger.LogInformation(
                             "User {UserId} already has an account",
@@ -63,78 +59,31 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                         return TypedResults.Problem("There was an error creating user");
                     }
 
-                    var email = claimsPrincipal.FindFirst(ClaimTypes.Email);
-                    var name = claimsPrincipal.FindFirst(ClaimTypes.Name);
+                    var (user, problem) = await CreateUserAsync(
+                        providerKey,
+                        context,
+                        req,
+                        claimsPrincipal,
+                        serviceProvider,
+                        userManager,
+                        signInManager,
+                        options,
+                        logger);
 
-                    var existingUser = email?.Value is not null ? await userManager.FindByEmailAsync(email.Value) : null;
-                    if (existingUser is not null && options.Value.AutoAccountLinking is false)
+                    if (problem is not null)
                     {
-                        logger.LogInformation("User {UserId} already has an account", claimsPrincipal.Identity.Name);
+                        return problem;
+                    }
+
+                    if (user is null)
+                    {
                         return TypedResults.Problem("There was an error creating user");
-                    }
-                    
-                    var user = existingUser ?? new TUser
-                    {
-                        UserName = name?.Value,
-                        Email = email?.Value,
-                        EmailConfirmed = email?.Value is not null,
-                    };
-
-                    var events = serviceProvider.GetService<ISignUpExternalEndpointEvents<TUser, TModel>>();
-                    if (events is not null)
-                    {
-                        var userCreatingRes = await events.UserCreatingAsync(req, context.Request, user);
-                        if (userCreatingRes is not null)
-                        {
-                            return userCreatingRes;
-                        }
-                    }
-
-                    IdentityResult result;
-                    if (existingUser is null)
-                    {
-                        result = await userManager.CreateAsync(user);
-                        if (!result.Succeeded)
-                        {
-                            logger.LogError("Error creating user: {Email}. Result: {Result}", user.Email, result);
-                            return TypedResults.Problem(result.ToValidationProblem());
-                        }
-                    }
-
-                    var schemes = await signInManager.GetExternalAuthenticationSchemesAsync();
-                    var scheme = schemes.FirstOrDefault(x => x.Name == claimsPrincipal.Identity.AuthenticationType);
-                    result = await userManager.AddLoginAsync(
-                        user,
-                        new UserLoginInfo(
-                            claimsPrincipal.Identity.AuthenticationType,
-                            providerKey,
-                            scheme?.DisplayName));
-
-                    if (!result.Succeeded)
-                    {
-                        logger.LogError(
-                            "Failed to add login info to user {UserId}: {Errors}",
-                            user.Id,
-                            string.Join(", ", result.Errors.Select(e => e.Description)));
-
-                        return TypedResults.Problem("There was an error creating user");
-                    }
-
-                    result = await userManager.AddToRolesAsync(user, options.Value.DefaultRoles);
-                    if (!result.Succeeded)
-                    {
-                        logger.LogError("Error adding user to roles: {Result}", result);
-                        return TypedResults.Problem("Error occured", statusCode: 500);
-                    }
-
-                    if (events is not null)
-                    {
-                        await events.UserCreatedAsync(req, context.Request, user);
                     }
 
                     signInManager.UseCookie = useCookie ?? false;
-                    await signInManager.SignInAsync(user, new AuthenticationProperties(), claimsPrincipal.Identity.AuthenticationType);
-                    
+                    await signInManager.SignInAsync(user, new AuthenticationProperties(),
+                        claimsPrincipal.Identity.AuthenticationType);
+
                     return TypedResults.Empty;
                 })
             .AddEndpointFilter<ValidationEndpointFilter<TModel>>()
@@ -143,6 +92,77 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                 b.RequireAuthenticatedUser();
                 b.AddAuthenticationSchemes(AufyAuthSchemeDefaults.SignUpExternalScheme);
             });
+    }
+
+    public static async Task<(TUser? user, ProblemHttpResult? problem)> CreateUserAsync(
+        string providerKey,
+        HttpContext context,
+        TModel req,
+        ClaimsPrincipal claimsPrincipal,
+        IServiceProvider serviceProvider,
+        UserManager<TUser> userManager,
+        AufySignInManager<TUser> signInManager,
+        IOptions<AufyOptions> options,
+        ILogger logger)
+    {
+        var email = claimsPrincipal.FindFirst(ClaimTypes.Email);
+        var name = claimsPrincipal.FindFirst(ClaimTypes.Name);
+        var user = new TUser
+        {
+            UserName = name?.Value,
+            Email = email?.Value,
+            EmailConfirmed = false,
+        };
+
+        var events = serviceProvider.GetService<ISignUpExternalEndpointEvents<TUser, TModel>>();
+        if (events is not null)
+        {
+            var userCreatingProblem = await events.UserCreatingAsync(req, context.Request, user);
+            if (userCreatingProblem is not null)
+            {
+                return (null, userCreatingProblem);
+            }
+        }
+
+        var result = await userManager.CreateAsync(user);
+        if (!result.Succeeded)
+        {
+            logger.LogError("Error creating user: {Email}. Result: {Result}", user.Email, result);
+            return (null, TypedResults.Problem(result.ToValidationProblem()));
+        }
+
+        var schemes = await signInManager.GetExternalAuthenticationSchemesAsync();
+        var scheme = schemes.FirstOrDefault(x => x.Name == claimsPrincipal.Identity?.AuthenticationType);
+        result = await userManager.AddLoginAsync(
+            user,
+            new UserLoginInfo(
+                claimsPrincipal.Identity.AuthenticationType,
+                providerKey,
+                scheme?.DisplayName));
+
+        if (!result.Succeeded)
+        {
+            logger.LogError(
+                "Failed to add login info to user {UserId}: {Errors}",
+                user.Id,
+                string.Join(", ", result.Errors.Select(e => e.Description)));
+
+            return (null, TypedResults.Problem("There was an error creating user"));
+        }
+
+        result = await userManager.AddToRolesAsync(user, options.Value.DefaultRoles);
+        if (!result.Succeeded)
+        {
+            logger.LogError("Error adding user to roles: {Result}", result);
+            return (null, TypedResults.Problem("Error occured", statusCode: 500));
+        }
+
+        if (events is not null)
+        {
+            await events.UserCreatedAsync(req, context.Request, user);
+        }
+
+        return (user, null);
     }
 }
 

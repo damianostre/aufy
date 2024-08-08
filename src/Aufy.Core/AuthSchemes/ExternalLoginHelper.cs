@@ -72,11 +72,18 @@ public static class ExternalLoginHelper
             }
         
             var exists = await userManager.UserWithLoginExistsAsync(context.Scheme.Name, providerKey.Value);
-            if (exists is false)
+            if (exists) return;
+
+            if (context.Identity is not null)
             {
-                context.Properties.SetParameter("signup", true);
-                context.Properties.RedirectUri += "?signup=true";
+                var linked = await userManager.TryLinkLoginAsync(context.Identity, context.Scheme);
+                // If the login was linked then Sign in
+                if (linked) return;
             }
+
+            // If login is not assigned to a user, then we need to redirect to signup
+            // It has to be done here as SignIn scheme does not have access to the RedirectUri
+            context.Properties.RedirectUri += "?signup=true";
         }
         catch (Exception e)
         {
