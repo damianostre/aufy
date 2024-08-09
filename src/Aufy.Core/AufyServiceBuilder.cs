@@ -102,19 +102,15 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
     public AufyServiceBuilder<TUser> UseExternalSignUpModel<TSignUpExternalRequest>()
-        where TSignUpExternalRequest : SignUpExternalRequest
+        where TSignUpExternalRequest : class
     {
-        var descriptor = Services.FirstOrDefault(
-            d => d.ServiceType == typeof(IAuthEndpoint) &&
-                 d.ImplementationType == typeof(SignUpExternalEndpoint<TUser, SignUpExternalRequest>));
-        if (descriptor is null)
+        if (AufyOptions.EnableSignUp is false)
         {
-            throw new(
-                "Error while registering SignUpExternalEndpoint with custom model. Default SignUpExternalEndpoint is not registered");
+            throw new("EnableSignUp is set to false in AufyOptions. Can't register SignUpExternalEndpoint");
         }
 
-        Services.Remove(descriptor);
         Services.AddSingleton<IAuthEndpoint, SignUpExternalEndpoint<TUser, TSignUpExternalRequest>>();
+        AufyOptions.Internal.CustomExternalSignUpFlow = true;
         return this;
     }
     

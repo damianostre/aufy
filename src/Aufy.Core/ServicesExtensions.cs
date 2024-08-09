@@ -47,7 +47,6 @@ public static class ServicesExtensions
         services.AddScoped<IRefreshTokenManager, RefreshTokenManager>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAufyEmailSenderManager<TUser>, AufyEmailSenderManager<TUser>>();
-        services.AddScoped<IAufyUserManager, AufyUserManager<TUser>>();
 
         if (opts.EnableEmailPasswordFlow)
         {
@@ -72,11 +71,6 @@ public static class ServicesExtensions
             services.AddSingleton<IAuthEndpoint, ExternalChallengeEndpoint<TUser>>();
             services.AddSingleton<IAuthEndpoint, ExternalProvidersEndpoint<TUser>>();
             services.AddSingleton<IAuthEndpoint, SignInExternalEndpoint<TUser>>();
-
-            if (opts.EnableSignUp)
-            {
-                services.AddSingleton<IAuthEndpoint, SignUpExternalEndpoint<TUser, SignUpExternalRequest>>();
-            }
         }
         
         services.AddSingleton<IAuthEndpoint, SignInRefreshEndpoint<TUser>>();
@@ -87,6 +81,7 @@ public static class ServicesExtensions
         var identityBuilder = services
             .AddIdentityCore<TUser>()
             .AddSignInManager<AufySignInManager<TUser>>()
+            .AddUserManager<AufyUserManager<TUser>>()
             .AddRoles<IdentityRole>()
             .AddDefaultTokenProviders();
 
