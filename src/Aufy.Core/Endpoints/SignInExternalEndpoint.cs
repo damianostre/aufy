@@ -59,7 +59,7 @@ public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identit
                             return TypedResults.Problem("Claims identity is missing");
                         }
 
-                        var (linkedUser, error) = await userManager.TryLinkLoginAsync(claimsIdentity);
+                        var (linkedUser, error) = await userManager.TryAutoLinkLoginAsync(claimsIdentity);
                         if (error is not null)
                         {
                             logger.LogError("Error linking login: {Error}", error);

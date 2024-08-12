@@ -56,7 +56,49 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
         return (true, null);
     }
 
-    public async Task<(TUser? user, string? error)> TryLinkLoginAsync(ClaimsIdentity identity)
+    public async Task<(TUser? user, string? error)> LinkLoginAsync(string userId, ClaimsIdentity identity)
+    {
+        var (checkLoginResult, error) = await CheckLogin(identity);
+        if (error is not null || checkLoginResult is null)
+        {
+            return (null, error ?? "Error occured");
+        }
+
+        var (providerKey, userWithLogin) = checkLoginResult;
+        if (userWithLogin is not null)
+        {
+            _logger.LogInformation("Cannot link login, user already exists. User: {UserId}", userWithLogin.Id);
+            return (null, null);
+        }
+
+        var userToLink = await FindByIdAsync(userId);
+        if (userToLink is null)
+        {
+            return (null, "User not found");
+        }
+
+        var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
+        var scheme = schemes.FirstOrDefault(x => x.Name == identity.AuthenticationType);
+        if (scheme is null)
+        {
+            return (null, $"Cannot find scheme {identity.AuthenticationType}");
+        }
+
+        var result = await AddLoginAsync(
+            userToLink, new UserLoginInfo(scheme.Name, providerKey, scheme.DisplayName));
+        if (!result.Succeeded)
+        {
+            _logger.LogError(
+                "Failed to add login info to user {UserId}: {Errors}",
+                userToLink.Id,
+                string.Join(", ", result.Errors.Select(e => e.Description)));
+            return (null, "Failed to add login info to user");
+        }
+
+        return (userToLink, null);
+    }
+
+    public async Task<(TUser? user, string? error)> TryAutoLinkLoginAsync(ClaimsIdentity identity)
     {
         var (checkLoginResult, error) = await CheckLogin(identity);
         if (error is not null || checkLoginResult is null)
@@ -121,7 +163,7 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
         var user = await FindByLoginAsync(identity.AuthenticationType, providerKey.Value);
         if (user is null)
         {
-
+            return (null, null);
         }
 
         return (new CheckLoginResult<TUser> { User = user, ProviderKey = providerKey.Value }, null);

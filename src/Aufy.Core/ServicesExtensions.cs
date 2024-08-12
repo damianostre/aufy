@@ -71,6 +71,7 @@ public static class ServicesExtensions
             services.AddSingleton<IAuthEndpoint, ExternalChallengeEndpoint<TUser>>();
             services.AddSingleton<IAuthEndpoint, ExternalProvidersEndpoint<TUser>>();
             services.AddSingleton<IAuthEndpoint, SignInExternalEndpoint<TUser>>();
+            services.AddSingleton<IAuthEndpoint, LinkExternalLoginEndpoint<TUser>>();
         }
         
         services.AddSingleton<IAuthEndpoint, SignInRefreshEndpoint<TUser>>();
