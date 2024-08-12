@@ -49,7 +49,6 @@ public static class ExternalLoginHelper
         oauth.Events.OnRemoteFailure = context =>
         {
             context.HandleResponse();
-            
             context.Properties ??= new();
             
             var redirectUri = context.Properties.RedirectUri + "?failed=true";
@@ -61,28 +60,27 @@ public static class ExternalLoginHelper
 
     private static async Task OnCreatingTicket(this OAuthCreatingTicketContext context)
     {
+        // If custom external signup flow is disabled, we use only sign in endpoint
+        // All scenarios will be handled by the sign in endpoint
+        if (AufyOptions.Internal.CustomExternalSignUpFlow is false)
+        {
+            return;
+        }
+
         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<OAuthCreatingTicketContext>>();
         try
         {
             var userManager = context.HttpContext.RequestServices.GetRequiredService<IAufyUserManager>();
-            var providerKey = context.Identity?.FindFirst(ClaimTypes.NameIdentifier);
-            if (providerKey is null)
+            var (result, error) = await userManager.ShouldUseExternalSignUpFlow(context.Identity);
+            if (error is not null || result is false)
             {
-                throw new("NameIdentifier claim is missing");
-            }
-        
-            var exists = await userManager.UserWithLoginExistsAsync(context.Scheme.Name, providerKey.Value);
-            if (exists) return;
-
-            if (context.Identity is not null)
-            {
-                var linked = await userManager.TryLinkLoginAsync(context.Identity, context.Scheme);
-                // If the login was linked then Sign in
-                if (linked) return;
+                logger.LogError("Error checking login: {Error}", error);
+                return;
             }
 
             // If login is not assigned to a user, then we need to redirect to signup
             // It has to be done here as SignIn scheme does not have access to the RedirectUri
+            context.Properties.SetParameter("signup", true);
             context.Properties.RedirectUri += "?signup=true";
         }
         catch (Exception e)

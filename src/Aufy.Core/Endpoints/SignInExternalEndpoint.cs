@@ -31,16 +31,14 @@ public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identit
                     await context.SignOutAsync(AufyAuthSchemeDefaults.SignUpExternalScheme);
                     signInManager.UseCookie = useCookie ?? false;
 
-                    var providerKey = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
-                    if (claimsPrincipal.Identity?.AuthenticationType is null || providerKey is null)
+                    var (checkLoginResult, checkError) = await userManager.CheckLogin(claimsPrincipal.Identity as ClaimsIdentity);
+                    if (checkError is not null || checkLoginResult is null)
                     {
-                        logger.LogInformation("User not authenticated or missing name claim: {Claims}",
-                            context.User.Claims);
-                        return TypedResults.Unauthorized();
+                        logger.LogError("Error checking login: {Error}", checkError);
+                        return TypedResults.Problem("Error occurred");
                     }
 
-                    var user = await signInManager.UserManager.FindByLoginAsync(
-                        claimsPrincipal.Identity.AuthenticationType, providerKey);
+                    var (providerKey, user) = checkLoginResult;
                     if (user is not null)
                     {
                         await signInManager.SignInAsync(user, new AuthenticationProperties(),
@@ -56,9 +54,19 @@ public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identit
 
                     if (options.Value.AutoAccountLinking)
                     {
-                        var linkedUser = await userManager.TryLinkLoginAsync(claimsPrincipal);
+                        if (claimsPrincipal.Identity is not ClaimsIdentity claimsIdentity)
+                        {
+                            return TypedResults.Problem("Claims identity is missing");
+                        }
+
+                        var (linkedUser, error) = await userManager.TryLinkLoginAsync(claimsIdentity);
+                        if (error is not null)
+                        {
+                            logger.LogError("Error linking login: {Error}", error);
+                            return TypedResults.Problem("Error occurred");
+                        }
                         // If the login was linked then Sign in
-                        if (linkedUser is not null)
+                        else if (linkedUser is not null)
                         {
                             await signInManager.SignInAsync(linkedUser, new AuthenticationProperties(),
                                 claimsPrincipal.Identity.AuthenticationType);
@@ -74,15 +82,15 @@ public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identit
 
                     var (newUser, problem) = await userManager.CreateUserWithLoginAsync(
                         providerKey, context, new DefaultSignupExternalRequest(), claimsPrincipal);
-                    if (newUser is null)
-                    {
-                        logger.LogError("Failed to create user");
-                        return TypedResults.Problem("There was an error creating user");
-                    }
-
                     if (problem is not null)
                     {
                         return problem;
+                    }
+
+                    if (newUser is null)
+                    {
+                        logger.LogError("Failed to create user");
+                        return TypedResults.Problem("Error occurred");
                     }
 
                     await signInManager.SignInAsync(newUser, new AuthenticationProperties(),

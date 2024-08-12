@@ -18,55 +18,114 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
     private readonly ILogger<AufyUserManager<TUser>> _logger;
     private readonly IServiceProvider _serviceProvider;
 
-    public async Task<bool> UserWithLoginExistsAsync(string provider, string providerKey)
+    public async Task<(bool result, string? error)> ShouldUseExternalSignUpFlow(ClaimsIdentity identity)
     {
-        var user = await FindByLoginAsync(provider, providerKey);
-        return user != null;
-    }
+        var (result, error) = await CheckLogin(identity);
+        if (error is not null || result is null)
+        {
+            _logger.LogError("Error checking login: {Error}", error);
+            return (false, error ?? "Error occurred");
+        }
 
-    public async Task<TUser?> TryLinkLoginAsync(ClaimsPrincipal claimsPrincipal)
-    {
+        var (_, user) = result;
+        if (user is not null)
+        {
+            _logger.LogInformation("User already exists, should not sign up");
+            return (false, null);
+        }
+
+        // If custom external signup flow is disabled, we use only sign in endpoint
+        if (AufyOptions.Internal.CustomExternalSignUpFlow is false)
+        {
+            return (false, null);
+        }
+
+        //
         if (_options.Value.AutoAccountLinking is false)
         {
-            _logger.LogDebug("Account linking is disabled");
-            return null;
+            return (false, null);
         }
 
-        var email = claimsPrincipal.FindFirst(ClaimTypes.Email);
-        var user = email?.Value is not null ? await FindByEmailAsync(email.Value) : null;
-        if (user is null)
+
+        var userToLink = await FindUserToLinkLogin(identity);
+        if (userToLink is not null)
         {
-            _logger.LogDebug("Login cannot be linked as no user with email {Email} exists", email?.Value);
-            return null;
+            return (false, null);
         }
 
-        var providerKeyClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier);
-        if (providerKeyClaim is null)
+        return (true, null);
+    }
+
+    public async Task<(TUser? user, string? error)> TryLinkLoginAsync(ClaimsIdentity identity)
+    {
+        var (checkLoginResult, error) = await CheckLogin(identity);
+        if (error is not null || checkLoginResult is null)
         {
-            _logger.LogError("NameIdentifier claim is missing");
-            throw new("NameIdentifier claim is missing");
+            return (null, error ?? "Error occured");
+        }
+
+        var (providerKey, user) = checkLoginResult;
+        if (user is not null)
+        {
+            _logger.LogInformation("Cannot link login, user already exists. User: {UserId}", user.Id);
+            return (null, null);
+        }
+
+        var userToLink = await FindUserToLinkLogin(identity);
+        if (userToLink is null)
+        {
+            return (null, null);
         }
 
         var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
-        var scheme = schemes.FirstOrDefault(x => x.Name == claimsPrincipal.Identity?.AuthenticationType);
+        var scheme = schemes.FirstOrDefault(x => x.Name == identity.AuthenticationType);
         if (scheme is null)
         {
-            _logger.LogError("Cannot find scheme {Scheme}", claimsPrincipal.Identity?.AuthenticationType);
-            throw new("Scheme not found");
+            return (null, $"Cannot find scheme {identity.AuthenticationType}");
         }
 
         var result = await AddLoginAsync(
-            user, new UserLoginInfo(scheme.Name, providerKeyClaim.Value, scheme.DisplayName));
+            userToLink, new UserLoginInfo(scheme.Name, providerKey, scheme.DisplayName));
         if (!result.Succeeded)
         {
             _logger.LogError(
                 "Failed to add login info to user {UserId}: {Errors}",
-                user.Id,
+                userToLink.Id,
                 string.Join(", ", result.Errors.Select(e => e.Description)));
-            throw new("Failed to add login info to user");
+            return (null, "Failed to add login info to user");
         }
 
-        return user;
+        return (userToLink, null);
+    }
+
+    private async Task<TUser?> FindUserToLinkLogin(ClaimsIdentity identity)
+    {
+        var email = identity.FindFirst(ClaimTypes.Email);
+        var userToLink = email?.Value is not null ? await FindByEmailAsync(email.Value) : null;
+        return userToLink;
+    }
+
+    public async Task<(CheckLoginResult<TUser>? result, string? error)> CheckLogin(ClaimsIdentity identity)
+    {
+        var providerKey = identity.FindFirst(ClaimTypes.NameIdentifier);
+        if (providerKey is null)
+        {
+            return (null, "NameIdentifier claim is missing");
+        }
+
+        if (identity.AuthenticationType is null)
+        {
+            return (null, "AuthenticationType is missing in identity");
+        }
+
+        var user = await FindByLoginAsync(identity.AuthenticationType, providerKey.Value);
+        if (user is null)
+        {
+
+        }
+
+        return (new CheckLoginResult<TUser> { User = user, ProviderKey = providerKey.Value }, null);
+
     }
 
     public async Task<(TUser? user, ProblemHttpResult? problem)> CreateUserWithLoginAsync<TModel>(
@@ -158,5 +217,17 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
 
 public interface IAufyUserManager
 {
-    Task<bool> UserWithLoginExistsAsync(string provider, string providerKey);
+    Task<(bool result, string? error)> ShouldUseExternalSignUpFlow(ClaimsIdentity identity);
+}
+
+public record CheckLoginResult<TUser> where TUser : IdentityUser, IAufyUser, new()
+{
+    public required string ProviderKey { get; set; }
+    public TUser? User { get; set; }
+
+    public void Deconstruct(out string providerKey, out TUser? user)
+    {
+        providerKey = ProviderKey;
+        user = User;
+    }
 }

@@ -33,14 +33,23 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                     await context.SignOutAsync(AufyAuthSchemeDefaults.SignInExternalScheme);
                     await context.SignOutAsync(AufyAuthSchemeDefaults.SignUpExternalScheme);
 
+                    // This shouldn't be reachable if the sign up is disabled
                     if (options.Value.EnableSignUp is false)
                     {
-                        throw new("Sign up is disabled. Endpoint should not be reachable");
+                        logger.LogError("Sign up is disabled, endpoint should not be reachable");
+                        return TypedResults.Problem("Error occurred");
+                    }
+
+                    // This shouldn't be reachable if the custom flow is disabled
+                    if (AufyOptions.Internal.CustomExternalSignUpFlow is false)
+                    {
+                        logger.LogError("Custom external sign up flow is disabled, endpoint should not be reachable");
+                        return TypedResults.Problem("Error occurred");
                     }
 
                     if (claimsPrincipal.Identity?.AuthenticationType is null)
                     {
-                        logger.LogInformation("User {UserId} has no authentication type",
+                        logger.LogInformation("Usser {UserId} has no authentication type",
                             claimsPrincipal.Identity?.Name);
                         return TypedResults.Unauthorized();
                     }
@@ -64,7 +73,6 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
 
                     var (user, problem) = await userManager.CreateUserWithLoginAsync(
                         providerKey, context, req, claimsPrincipal);
-
                     if (problem is not null)
                     {
                         return problem;
