@@ -41,7 +41,6 @@ public class SignUpEndpoint<TUser, TModel> : IAuthEndpoint where TModel : SignUp
                     user = new TUser
                     {
                         Email = req.Email,
-                        UserName = req.Email
                     };
 
                     var events = serviceProvider.GetService<ISignUpEndpointEvents<TUser, TModel>>();

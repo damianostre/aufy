@@ -13,10 +13,10 @@ namespace Aufy.Core;
 public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
     where TUser : IdentityUser, IAufyUser, new()
 {
-    private readonly SignInManager<TUser> _signInManager;
     private readonly IOptions<AufyOptions> _options;
     private readonly ILogger<AufyUserManager<TUser>> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IAuthenticationSchemeProvider _schemes;
 
     public async Task<(bool result, string? error)> ShouldUseExternalSignUpFlow(ClaimsIdentity identity)
     {
@@ -77,8 +77,12 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             return (null, "User not found");
         }
 
-        var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
-        var scheme = schemes.FirstOrDefault(x => x.Name == identity.AuthenticationType);
+        if (identity.AuthenticationType is null)
+        {
+            return (null, "AuthenticationType is missing in identity");
+        }
+
+        var scheme = await _schemes.GetSchemeAsync(identity.AuthenticationType);
         if (scheme is null)
         {
             return (null, $"Cannot find scheme {identity.AuthenticationType}");
@@ -119,8 +123,13 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             return (null, null);
         }
 
-        var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
-        var scheme = schemes.FirstOrDefault(x => x.Name == identity.AuthenticationType);
+
+        if (identity.AuthenticationType is null)
+        {
+            return (null, "AuthenticationType is missing in identity");
+        }
+
+        var scheme = await _schemes.GetSchemeAsync(identity.AuthenticationType);
         if (scheme is null)
         {
             return (null, $"Cannot find scheme {identity.AuthenticationType}");
@@ -163,7 +172,7 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
         var user = await FindByLoginAsync(identity.AuthenticationType, providerKey.Value);
         if (user is null)
         {
-            return (null, null);
+            return (new CheckLoginResult<TUser> { ProviderKey = providerKey.Value }, null);
         }
 
         return (new CheckLoginResult<TUser> { User = user, ProviderKey = providerKey.Value }, null);
@@ -177,10 +186,10 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
         ClaimsPrincipal claimsPrincipal) where TModel : class
     {
         var email = claimsPrincipal.FindFirst(ClaimTypes.Email);
-        var name = claimsPrincipal.FindFirst(ClaimTypes.Name);
+        // var name = claimsPrincipal.FindFirst(ClaimTypes.Name);
         var user = new TUser
         {
-            UserName = name?.Value,
+            // UserName = name?.Value,
             Email = email?.Value,
             EmailConfirmed = false,
         };
@@ -202,8 +211,13 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             return (null, TypedResults.Problem(result.ToValidationProblem()));
         }
 
-        var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
-        var scheme = schemes.FirstOrDefault(x => x.Name == claimsPrincipal.Identity?.AuthenticationType);
+        if (claimsPrincipal.Identity?.AuthenticationType is null)
+        {
+            _logger.LogInformation("User {UserId} has no authentication type", claimsPrincipal.Identity?.Name);
+            return (null, TypedResults.Problem("There was an error creating user"));
+        }
+
+        var scheme = await _schemes.GetSchemeAsync(claimsPrincipal.Identity.AuthenticationType);
         result = await AddLoginAsync(
             user,
             new UserLoginInfo(
@@ -237,7 +251,6 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
     }
 
     public AufyUserManager(
-        SignInManager<TUser> signInManager,
         IOptions<AufyOptions> options,
         IUserStore<TUser> store,
         IOptions<IdentityOptions> optionsAccessor,
@@ -247,12 +260,13 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
         ILookupNormalizer keyNormalizer,
         IdentityErrorDescriber errors,
         IServiceProvider services,
-        ILogger<AufyUserManager<TUser>> logger)
+        ILogger<AufyUserManager<TUser>> logger,
+        IAuthenticationSchemeProvider schemes)
         : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger)
     {
-        _signInManager = signInManager;
         _options = options;
         _logger = logger;
+        _schemes = schemes;
         _serviceProvider = services;
     }
 }

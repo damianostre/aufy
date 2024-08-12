@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using AspNet.Security.OAuth.Discord;
 using AspNet.Security.OAuth.GitHub;
 using WebApi.Data;
@@ -25,7 +24,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services
-    .AddAufy<MyUser>(builder.Configuration)
+    .AddAufy<MyUser>(builder.Configuration, options =>
+    {
+        options.AutoAccountLinking = false;
+    })
     .AddProvider(GitHubAuthenticationDefaults.AuthenticationScheme, (auth, options) =>
     {
         auth.AddGitHub(o => o.Configure(GitHubAuthenticationDefaults.AuthenticationScheme, options));
@@ -41,7 +43,11 @@ builder.Services
     // .UseExternalSignUpModel<MySignUpExternalRequest>();
 
 
-builder.Services.Configure<IdentityOptions>(options => { options.SignIn.RequireConfirmedEmail = true; });
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.SignIn.RequireConfirmedEmail = true;
+    options.User.RequireUniqueEmail = false;
+});
 
 var app = builder.Build();
 

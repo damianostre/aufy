@@ -44,4 +44,8 @@
       <ProjectReference Include="..\Aufy.EntityFrameworkCore\Aufy.EntityFrameworkCore.csproj" />
       <ProjectReference Include="..\Aufy.FluentEmail\Aufy.FluentEmail.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="logs\" />
+    </ItemGroup>
 </Project>
