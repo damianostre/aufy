@@ -31,7 +31,7 @@ public class LinkExternalLoginEndpoint<TUser> : IAuthEndpoint where TUser : Iden
                         logger.LogInformation(
                             singInExternalAuthenticateResult.Failure,
                             "Failed to authenticate with {Scheme}", AufyAuthSchemeDefaults.SignInExternalScheme);
-                        return TypedResults.Unauthorized();
+                        return TypedResults.Problem("Error occurred");
                     }
 
                     await context.SignOutAsync(AufyAuthSchemeDefaults.SignInExternalScheme);
@@ -41,7 +41,7 @@ public class LinkExternalLoginEndpoint<TUser> : IAuthEndpoint where TUser : Iden
                     if (userId is null)
                     {
                         logger.LogError("NameIdentifier claim is missing from user {Name}", context.User.Identity?.Name);
-                        return TypedResults.Unauthorized();
+                        return TypedResults.Problem("Error occurred");
                     }
 
                     var (result, error) = await userManager.LinkLoginAsync(userId, identity);

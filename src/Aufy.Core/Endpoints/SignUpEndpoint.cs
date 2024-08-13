@@ -40,6 +40,7 @@ public class SignUpEndpoint<TUser, TModel> : IAuthEndpoint where TModel : SignUp
 
                     user = new TUser
                     {
+                        UserName = req.Email,
                         Email = req.Email,
                     };
 

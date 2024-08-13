@@ -186,10 +186,10 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
         ClaimsPrincipal claimsPrincipal) where TModel : class
     {
         var email = claimsPrincipal.FindFirst(ClaimTypes.Email);
-        // var name = claimsPrincipal.FindFirst(ClaimTypes.Name);
+        var name = claimsPrincipal.FindFirst(ClaimTypes.Name);
         var user = new TUser
         {
-            // UserName = name?.Value,
+            UserName = name?.Value,
             Email = email?.Value,
             EmailConfirmed = false,
         };

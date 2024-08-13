@@ -6,7 +6,6 @@ using Aufy.Core.AuthSchemes;
 using Aufy.Core.Endpoints;
 using Aufy.EntityFrameworkCore;
 using Aufy.FluentEmail;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -24,10 +23,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services
-    .AddAufy<MyUser>(builder.Configuration, options =>
-    {
-        options.AutoAccountLinking = false;
-    })
+    .AddAufy<MyUser>(builder.Configuration)
     .AddProvider(GitHubAuthenticationDefaults.AuthenticationScheme, (auth, options) =>
     {
         auth.AddGitHub(o => o.Configure(GitHubAuthenticationDefaults.AuthenticationScheme, options));
@@ -41,13 +37,6 @@ builder.Services
     .AddFluentEmail();
     // .UseSignUpModel<MySignUpRequest>()
     // .UseExternalSignUpModel<MySignUpExternalRequest>();
-
-
-builder.Services.Configure<IdentityOptions>(options =>
-{
-    options.SignIn.RequireConfirmedEmail = true;
-    options.User.RequireUniqueEmail = false;
-});
 
 var app = builder.Build();
 

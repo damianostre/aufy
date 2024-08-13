@@ -1,31 +1,22 @@
-﻿import {useAuth} from "../../../providers/AuthProvider.tsx";
+﻿import {ChallengeMode, useAuth} from "../../../providers/AuthProvider.tsx";
 import {useState} from "react";
 
-export const ExternalProviders = () => {
+export const ExternalProviders = ({mode}: { mode: ChallengeMode }) => {
     const auth = useAuth();
     const [disabled, setDisabled] = useState(false)
     
     const challenge = (provider: string) => {
         if (disabled) return;
-        auth.challenge({ provider });
+        auth.challenge({ provider, mode });
         setDisabled(true);
     };
     
-    return (<div>
-        <div className="relative mt-10">
-            <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-sm font-medium leading-6">
-                <span className="bg-white px-6 text-gray-900">Or continue with</span>
-            </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-2 gap-4">
+    return (<div className="grid grid-cols-2 gap-4">
             <a
                 onClick={() => challenge("discord")}
                 className={(disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer")
                     + " flex w-full items-center justify-center gap-3 rounded-md bg-[#5865F2] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5865F2]"}
+                style={{maxWidth: "15rem"}}
             >
                 <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 21 16">
                     <path
@@ -37,7 +28,8 @@ export const ExternalProviders = () => {
             <a
                 onClick={() => challenge("github")}
                 className={(disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer")
-                    + " flex w-full items-center justify-center gap-3 rounded-md bg-[#24292F] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#24292F]"}
+                    + " max-w-xs flex w-full items-center justify-center gap-3 rounded-md bg-[#24292F] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#24292F]"}
+                style={{maxWidth: "15rem"}}
             >
                 <svg className="h-5 w-5 block" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
                     <path
@@ -48,6 +40,5 @@ export const ExternalProviders = () => {
                 </svg>
                 <span className="text-sm font-semibold leading-6">GitHub</span>
             </a>
-        </div>
-    </div>);
+        </div>);
 };

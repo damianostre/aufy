@@ -86,6 +86,12 @@ public static class ServicesExtensions
             .AddRoles<IdentityRole>()
             .AddDefaultTokenProviders();
 
+        services.Configure<IdentityOptions>(options =>
+        {
+            options.SignIn.RequireConfirmedEmail = true;
+            options.User.RequireUniqueEmail = true;
+        });
+
         var authenticationBuilder = services
             .AddAuthorization()
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -132,7 +138,6 @@ public static class ServicesExtensions
                 o.Cookie.HttpOnly = true;
                 o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                 o.ExpireTimeSpan = TimeSpan.FromSeconds(60);
-                o.Cookie.Path = opts.AuthApiBasePath + "/signin/external";
                 o.Cookie.Name = AufyAuthSchemeDefaults.SignInExternalScheme;
             })
             .AddCookie(AufyAuthSchemeDefaults.SignUpExternalScheme, o =>
