@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useMemo} from 'react';
 import storage from "../utils/storage.ts";
-import {auth, AuthUser, ExternalChallengeRequest, WhoAmIResponse} from "../api/auth.ts";
+import {AccountInfoResponse, auth, AuthUser, ExternalChallengeRequest, WhoAmIResponse} from "../api/auth.ts";
 import {axios} from "../lib/axios.ts";
 import Axios, {AxiosResponse, InternalAxiosRequestConfig} from 'axios';
 
@@ -63,7 +63,7 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
         });
     };
 
-    const linkLogin = async (): Promise<void | AxiosResponse> => {
+    const linkLogin = async (): Promise<AccountInfoResponse> => {
         return auth.linkLogin();
     };
 
@@ -114,7 +114,7 @@ export interface AuthContextProps {
     signOut: () => void;
     challenge: (data: ExternalChallengeRequest) => void;
     signInExternal: () => Promise<AuthUser>;
-    linkLogin: () => Promise<void | AxiosResponse>;
+    linkLogin: () => Promise<AccountInfoResponse>;
     signUpExternal: (payload: SignUpExternalModel) => Promise<AuthUser | AxiosResponse>;
     whoAmI: () => Promise<WhoAmIResponse>;
 }

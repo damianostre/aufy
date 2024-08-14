@@ -8,6 +8,7 @@ using Aufy.EntityFrameworkCore;
 using Aufy.FluentEmail;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using WebApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration
@@ -34,9 +35,9 @@ builder.Services
     })
     .AddDefaultCorsPolicy()
     .AddEntityFrameworkStore<ApplicationDbContext, MyUser>()
-    .AddFluentEmail();
+    .AddFluentEmail()
     // .UseSignUpModel<MySignUpRequest>()
-    // .UseExternalSignUpModel<MySignUpExternalRequest>();
+    .UseExternalSignUpModel<MySignUpExternalRequest>();
 
 var app = builder.Build();
 

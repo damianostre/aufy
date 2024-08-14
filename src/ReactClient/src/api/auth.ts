@@ -54,10 +54,12 @@ const signInExternal = async (): Promise<AuthUser | AxiosResponse> => {
     });
 };
 
-const linkLogin = async (): Promise<void | AxiosResponse> => {
+const linkLogin = async (): Promise<AccountInfoResponse> => {
     const path = '/link/external';
 
-    return axios.post<void>(authApiPrefix + path);
+    return axios.post<AccountInfoResponse>(accountApiPrefix + path).then((res) => {
+        return res.data;
+    });
 };
 
 const whoAmI = async (): Promise<WhoAmIResponse> => {
@@ -128,7 +130,7 @@ export interface AuthApi {
     signUp: (data: SignUpRequest) => Promise<SignUpResponse>;
     signIn: (data: SignInRequest) => Promise<AuthUser>;
     challengeExternal: (provider: string, callbackUrl: string) => void;
-    linkLogin: () => Promise<void | AxiosResponse>;
+    linkLogin: () => Promise<AccountInfoResponse>;
     signInExternal: () => Promise<AuthUser | AxiosResponse>;
     signUpExternal: (data: SignUpExternalRequest) => Promise<AuthUser | AxiosResponse>;
     whoAmI: () => Promise<WhoAmIResponse>;

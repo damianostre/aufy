@@ -13,12 +13,12 @@ using Microsoft.Extensions.Options;
 
 namespace Aufy.Core.Endpoints;
 
-public class LinkExternalLoginEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, IAufyUser, new()
+public class LinkExternalLoginEndpoint<TUser> : IAccountEndpoint where TUser : IdentityUser, IAufyUser, new()
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {
         return builder.MapPost("/link/external",
-                async Task<Results<EmptyHttpResult, UnauthorizedHttpResult, ProblemHttpResult>> (
+                async Task<Results<Ok<AccountInfoResponse>, UnauthorizedHttpResult, ProblemHttpResult>> (
                     [FromServices] AufyUserManager<TUser> userManager,
                     [FromServices] ILogger<LinkExternalLoginEndpoint<TUser>> logger,
                     HttpContext context) =>
@@ -44,14 +44,26 @@ public class LinkExternalLoginEndpoint<TUser> : IAuthEndpoint where TUser : Iden
                         return TypedResults.Problem("Error occurred");
                     }
 
-                    var (result, error) = await userManager.LinkLoginAsync(userId, identity);
-                    if (error is not null || result is null)
+                    var (user, error) = await userManager.LinkLoginAsync(userId, identity);
+                    if (error is not null || user is null)
                     {
                         logger.LogError("Error linking login: {Error}", error);
                         return TypedResults.Problem("Error occurred");
                     }
 
-                    return TypedResults.Empty;
+                    var logins = await userManager.GetLoginsAsync(user);
+                    var roles = await userManager.GetRolesAsync(user);
+
+                    var res = new AccountInfoResponse
+                    {
+                        Email = user.Email,
+                        Username = user.UserName,
+                        HasPassword = await userManager.HasPasswordAsync(user),
+                        Roles = roles.ToList(),
+                        Logins = logins.Select(l => l.LoginProvider).ToList()
+                    };
+
+                    return TypedResults.Ok(res);
                 })
             .RequireAuthorization();
     }

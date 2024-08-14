@@ -25,7 +25,7 @@ export const ExternalProviders = ({mode, hide}: { mode: ChallengeMode, hide?: st
                 <span className="text-sm font-semibold leading-6">Discord</span>
             </a>}
 
-            {hide?.includes("GitHub") ? null : <a
+        {hide?.includes("GitHub") ? null : <a
                 onClick={() => challenge("github")}
                 className={(disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer")
                     + " max-w-xs flex w-full items-center justify-center gap-3 rounded-md bg-[#24292F] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#24292F]"}

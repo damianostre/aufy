@@ -21,13 +21,10 @@ export const MyAccount = () => {
         if (!link) return;
 
         if (failed) {
-            //TODO
+            alert("Failed to link account");
         } else {
-            authProvider.linkLogin().then(() => {
-                debugger;
-                auth.accountInfo().then((res) => {
-                    setUser(res);
-                });
+            authProvider.linkLogin().then((res) => {
+                setUser(res);
             }).catch(() => {
                 alert("Failed to link account");
             });
