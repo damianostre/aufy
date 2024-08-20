@@ -35,9 +35,9 @@ builder.Services
     })
     .AddDefaultCorsPolicy()
     .AddEntityFrameworkStore<ApplicationDbContext, MyUser>()
-    .AddFluentEmail()
+    .AddFluentEmail();
     // .UseSignUpModel<MySignUpRequest>()
-    .UseExternalSignUpModel<MySignUpExternalRequest>();
+    // .UseExternalSignUpModel<MySignUpExternalRequest>();
 
 var app = builder.Build();
 
