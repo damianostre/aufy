@@ -11,6 +11,7 @@ Starter application templates is the easiest way to start with Aufy. It provides
 Each starter template application consists of a .NET solution (`WebApp.[Starter Type].sln`) with the following projects:
 - Backend Web API project with Aufy library (`WebApi.[Starter Type]`)
 - Frontend client application (`Client.[Starter Type]`)
+- Shared typescript project with API client and models (`AufyClient`)
 
 Each starter template shares the same Web API codebase, but have separate projects. The client application is different for each starter template.
 
@@ -23,6 +24,16 @@ Each `WebApi` project has the following features:
 - Serilog logging with pre-configured console and file sinks
 - OpenAPI/Swagger
 - Discord and GitHub social logins pre-configured
+
+## AufyClient project
+
+`AufyClient` provides:
+- Shared API client
+- Default token and user storage implementation with `Local Storage` and `HttpOnly` cookies
+- Shared models
+- Axios HTTP client with pre-configured interceptors for refresh tokens and error handling
+
+`AufyClient` can be used as a standalone library in any other project.
 
 ## Client project
 

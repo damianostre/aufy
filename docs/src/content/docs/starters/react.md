@@ -13,7 +13,7 @@ sidebar:
 - React hook form for form handling
 - Zod for form validation
 - Axios for HTTP requests
-- Tailwind CSS for styling
+- Tailwind CSS
 
 ## Custom Sign up flow
 

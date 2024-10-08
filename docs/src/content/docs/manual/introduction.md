@@ -26,6 +26,8 @@ It provides a set of Web API endpoints, helpers, and sample client applications.
 - Password change and reset
 - Sample Client applications
   - React
+  - Vue
+  - Angular
 - Email sending abstraction for Email confirmation and password reset
 - FluentEmail integration
   - Ready to use templates with customization options
