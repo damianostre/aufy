@@ -180,3 +180,11 @@ Once you got your client IDs and secrets, open secrets.json file in the WebApi p
 
 * `WebApiWithClient` - runs the WebApi project and the Client project using SPA Proxy.
 * `WebApi` - runs only the WebApi project. You need to run the Client project separately with `npm run dev` command.
+
+## 📸 Aufy Starters Screenshots
+
+![Sign In](./images/signin.png)
+![Sign Up](./images/signup.png)
+![Forgot Password](./images/forgot-password.png)
+![My Account](./images/myaccount.png)
+![My Account with Password](./images/myaccount-password.png)
