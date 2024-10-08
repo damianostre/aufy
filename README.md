@@ -16,8 +16,10 @@
 - 🌐 Social logins (Discord and GitHub configured in templates)
 - 📧 Email/password sign up with confirmation
 - 🔑 Password change and reset functionality
-- 🖥️ Sample client application
+- 🖥️ Sample client applications - [Aufy starters](https://github.com/damianostre/aufy-starters)
   - React
+  - Vue.js
+  - Angular
 - 📨 Email sending abstraction for confirmations and password resets
 - 📬 FluentEmail integration with customizable templates
 - 🛠️ Customizable sign-up endpoints
