@@ -1,22 +1,31 @@
 # Aufy
-Aufy is a simple open-source .NET library for user authentication built on top of ASP.NET Core Identity.
-It provides a set of Web API endpoints, helpers, and sample client applications.
 
-See documentation at [https://aufy.dev](https://aufy.dev)
+<p align="center">
+  <img src="icon.png" alt="Logo" width="100" height="100">
+</p>
 
-Features:
 
-- Ready to use API endpoints
-- JWT bearer authentication with refresh tokens
-- Social logins. Discord and GitHub configured in the templates
-- Email/password sign up
-- Email confirmation with resend of the confirmation email
-- Password change and reset
-- Sample Client applications
+<p align="center">
+  <strong>Simple, Open-Source User Authentication for ASP.NET Core</strong>
+</p>
+
+## 🚀 Features
+
+- ✅ Ready-to-use API endpoints
+- 🔐 JWT bearer authentication with refresh tokens
+- 🌐 Social logins (Discord and GitHub configured in templates)
+- 📧 Email/password sign up with confirmation
+- 🔑 Password change and reset functionality
+- 🖥️ Sample client application
   - React
-- Email sending abstraction for Email confirmation and password reset
-- FluentEmail integration
-  - Ready to use templates with customization options
-- Sign Up endpoints customization
-  - Custom sign up request model
-- OpenAPI/Swagger support with customization options
+- 📨 Email sending abstraction for confirmations and password resets
+- 📬 FluentEmail integration with customizable templates
+- 🛠️ Customizable sign-up endpoints
+- 📚 OpenAPI/Swagger support with customization options
+
+## 📖 Documentation
+
+For detailed documentation and usage instructions, visit our official documentation site:
+
+[https://aufy.dev](https://aufy.dev)
+

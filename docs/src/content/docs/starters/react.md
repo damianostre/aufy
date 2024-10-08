@@ -8,6 +8,7 @@ sidebar:
 ## Technology stack
 
 - TypeScript
+- React 18
 - Vite for the build system
 - React router for routing
 - React hook form for form handling
