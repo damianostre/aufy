@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using AspNet.Security.OAuth.Discord;
 using AspNet.Security.OAuth.GitHub;
 using WebApi.Data;
@@ -7,9 +6,9 @@ using Aufy.Core.AuthSchemes;
 using Aufy.Core.Endpoints;
 using Aufy.EntityFrameworkCore;
 using Aufy.FluentEmail;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using WebApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration
@@ -39,9 +38,6 @@ builder.Services
     .AddFluentEmail();
     // .UseSignUpModel<MySignUpRequest>()
     // .UseExternalSignUpModel<MySignUpExternalRequest>();
-
-
-builder.Services.Configure<IdentityOptions>(options => { options.SignIn.RequireConfirmedEmail = true; });
 
 var app = builder.Build();
 

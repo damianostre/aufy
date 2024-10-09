@@ -21,6 +21,11 @@ public class AufyOptions
     public ClientAppOptions ClientApp { get; set; } = new();
     public AufyJwtBearerOptions JwtBearer { get; set; } = new();
     public AufyProviders Providers { get; set; } = new();
+
+    internal class Internal
+    {
+        public static bool CustomExternalSignUpFlow { get; set; }
+    }
 }
 
 public class ClientAppOptions

@@ -1,6 +1,6 @@
 ﻿using Aufy.Core.Endpoints;
 
-namespace Aufy.Server.Extended;
+namespace WebApi;
 
 public interface IMySignUpRequest
 {
@@ -14,7 +14,7 @@ public class MySignUpRequest : SignUpRequest, IMySignUpRequest
     public string? MySiteUrl { get; set; }
 }
 
-public class MySignUpExternalRequest : SignUpExternalRequest, IMySignUpRequest
+public class MySignUpExternalRequest : IMySignUpRequest
 {
     public string? AboutMe { get; set; }
     public string? MySiteUrl { get; set; }

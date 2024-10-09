@@ -1,6 +1,7 @@
 import storage from "../utils/storage.ts";
 import {axios, axiosCreate} from "../lib/axios.ts";
 import {AxiosResponse} from "axios";
+import {ChallengeMode} from "../providers/AuthProvider.tsx";
 
 const authApiPrefix = import.meta.env.VITE_AUTH_API_BASE_PATH;
 const accountApiPrefix = import.meta.env.VITE_ACCOUNT_API_BASE_PATH;
@@ -21,9 +22,9 @@ const signIn = async (data: SignInRequest): Promise<AuthUser> => {
         });
 };
 
-const externalChallenge = async (data: ExternalChallengeRequest) => {
-    const api = import.meta.env.VITE_API_URL + authApiPrefix + "/external/challenge/" + data.provider
-        + "?CallbackUrl=" + window.location.origin + "/external-challenge-callback/" + data.provider;
+const externalChallenge = async (provider: string, callbackUrl: string) => {
+    const api = import.meta.env.VITE_API_URL + authApiPrefix + "/external/challenge/" + provider
+        + "?CallbackUrl=" + callbackUrl;
     window.location.replace(api);
 };
 
@@ -50,6 +51,14 @@ const signInExternal = async (): Promise<AuthUser | AxiosResponse> => {
             storage.setUser(user);
             return user;
         })
+    });
+};
+
+const linkLogin = async (): Promise<AccountInfoResponse> => {
+    const path = '/link/external';
+
+    return axios.post<AccountInfoResponse>(accountApiPrefix + path).then((res) => {
+        return res.data;
     });
 };
 
@@ -105,6 +114,7 @@ export const auth = {
     challengeExternal: externalChallenge,
     signInExternal,
     signUpExternal,
+    linkLogin,
     whoAmI,
     signOut,
     refreshToken,
@@ -119,7 +129,8 @@ export const auth = {
 export interface AuthApi {
     signUp: (data: SignUpRequest) => Promise<SignUpResponse>;
     signIn: (data: SignInRequest) => Promise<AuthUser>;
-    challengeExternal: (data: ExternalChallengeRequest) => void;
+    challengeExternal: (provider: string, callbackUrl: string) => void;
+    linkLogin: () => Promise<AccountInfoResponse>;
     signInExternal: () => Promise<AuthUser | AxiosResponse>;
     signUpExternal: (data: SignUpExternalRequest) => Promise<AuthUser | AxiosResponse>;
     whoAmI: () => Promise<WhoAmIResponse>;
@@ -162,6 +173,7 @@ export interface SignInRequest {
 }
 
 export interface ExternalChallengeRequest {
+    mode: ChallengeMode;
     provider: string;
 }
 
