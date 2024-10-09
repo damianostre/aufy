@@ -1,43 +1,35 @@
-﻿import {useAuth} from "../../../providers/AuthProvider.tsx";
+﻿import {ChallengeMode, useAuth} from "../../../providers/AuthProvider.tsx";
 import {useState} from "react";
 
-export const ExternalProviders = () => {
+export const ExternalProviders = ({mode, hide}: { mode: ChallengeMode, hide?: string[] }) => {
     const auth = useAuth();
     const [disabled, setDisabled] = useState(false)
     
     const challenge = (provider: string) => {
         if (disabled) return;
-        auth.challenge({ provider });
+        auth.challenge({ provider, mode });
         setDisabled(true);
     };
     
-    return (<div>
-        <div className="relative mt-10">
-            <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-sm font-medium leading-6">
-                <span className="bg-white px-6 text-gray-900">Or continue with</span>
-            </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-2 gap-4">
-            <a
+    return (<div className="grid grid-cols-2 gap-4">
+        {hide?.includes("Discord") ? null : <a
                 onClick={() => challenge("discord")}
                 className={(disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer")
                     + " flex w-full items-center justify-center gap-3 rounded-md bg-[#5865F2] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5865F2]"}
+                style={{maxWidth: "15rem"}}
             >
                 <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 21 16">
                     <path
                         d="M16.942 1.556a16.3 16.3 0 0 0-4.126-1.3 12.04 12.04 0 0 0-.529 1.1 15.175 15.175 0 0 0-4.573 0 11.585 11.585 0 0 0-.535-1.1 16.274 16.274 0 0 0-4.129 1.3A17.392 17.392 0 0 0 .182 13.218a15.785 15.785 0 0 0 4.963 2.521c.41-.564.773-1.16 1.084-1.785a10.63 10.63 0 0 1-1.706-.83c.143-.106.283-.217.418-.33a11.664 11.664 0 0 0 10.118 0c.137.113.277.224.418.33-.544.328-1.116.606-1.71.832a12.52 12.52 0 0 0 1.084 1.785 16.46 16.46 0 0 0 5.064-2.595 17.286 17.286 0 0 0-2.973-11.59ZM6.678 10.813a1.941 1.941 0 0 1-1.8-2.045 1.93 1.93 0 0 1 1.8-2.047 1.919 1.919 0 0 1 1.8 2.047 1.93 1.93 0 0 1-1.8 2.045Zm6.644 0a1.94 1.94 0 0 1-1.8-2.045 1.93 1.93 0 0 1 1.8-2.047 1.918 1.918 0 0 1 1.8 2.047 1.93 1.93 0 0 1-1.8 2.045Z"></path>
                 </svg>
                 <span className="text-sm font-semibold leading-6">Discord</span>
-            </a>
+            </a>}
 
-            <a
+        {hide?.includes("GitHub") ? null : <a
                 onClick={() => challenge("github")}
                 className={(disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer")
-                    + " flex w-full items-center justify-center gap-3 rounded-md bg-[#24292F] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#24292F]"}
+                    + " max-w-xs flex w-full items-center justify-center gap-3 rounded-md bg-[#24292F] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#24292F]"}
+                style={{maxWidth: "15rem"}}
             >
                 <svg className="h-5 w-5 block" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
                     <path
@@ -47,7 +39,6 @@ export const ExternalProviders = () => {
                     />
                 </svg>
                 <span className="text-sm font-semibold leading-6">GitHub</span>
-            </a>
-        </div>
-    </div>);
+            </a>}
+        </div>);
 };

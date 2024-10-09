@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useMemo} from 'react';
 import storage from "../utils/storage.ts";
-import {auth, AuthUser, ExternalChallengeRequest, WhoAmIResponse} from "../api/auth.ts";
+import {AccountInfoResponse, auth, AuthUser, ExternalChallengeRequest, WhoAmIResponse} from "../api/auth.ts";
 import {axios} from "../lib/axios.ts";
 import Axios, {AxiosResponse, InternalAxiosRequestConfig} from 'axios';
 
@@ -46,7 +46,10 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
     };
 
     const challenge = async (data: ExternalChallengeRequest) => {
-        auth.challengeExternal(data);
+        const callbackUrl = data.mode == 'SignIn'
+            ? window.location.origin + "/external-challenge-callback/" + data.provider
+            : window.location.origin + "/profile?link=" + data.provider;
+        auth.challengeExternal(data.provider, callbackUrl);
     };
 
     const signInExternal = async (): Promise<AuthUser> => {
@@ -58,6 +61,10 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
 
             throw Error("Invalid response");
         });
+    };
+
+    const linkLogin = async (): Promise<AccountInfoResponse> => {
+        return auth.linkLogin();
     };
 
     const signUpExternal = async (payload: SignUpExternalModel): Promise<AuthUser | AxiosResponse> => {
@@ -89,6 +96,7 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
             signUpExternal: signUpExternal,
             whoAmI: whoAmI,
             challenge: challenge,
+            linkLogin: linkLogin,
         }),
         [user]
     );
@@ -106,6 +114,7 @@ export interface AuthContextProps {
     signOut: () => void;
     challenge: (data: ExternalChallengeRequest) => void;
     signInExternal: () => Promise<AuthUser>;
+    linkLogin: () => Promise<AccountInfoResponse>;
     signUpExternal: (payload: SignUpExternalModel) => Promise<AuthUser | AxiosResponse>;
     whoAmI: () => Promise<WhoAmIResponse>;
 }
@@ -134,4 +143,6 @@ export interface SignInModel {
     password: string;
     rememberMe: boolean;
 }
+
+export type ChallengeMode = 'SignIn' | 'LinkLogin';
 

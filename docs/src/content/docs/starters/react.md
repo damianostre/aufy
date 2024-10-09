@@ -8,12 +8,13 @@ sidebar:
 ## Technology stack
 
 - TypeScript
+- React 18
 - Vite for the build system
 - React router for routing
 - React hook form for form handling
 - Zod for form validation
 - Axios for HTTP requests
-- Tailwind CSS for styling
+- Tailwind CSS
 
 ## Custom Sign up flow
 

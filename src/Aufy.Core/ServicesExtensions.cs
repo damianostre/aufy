@@ -47,7 +47,6 @@ public static class ServicesExtensions
         services.AddScoped<IRefreshTokenManager, RefreshTokenManager>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAufyEmailSenderManager<TUser>, AufyEmailSenderManager<TUser>>();
-        services.AddScoped<IAufyUserManager, AufyUserManager<TUser>>();
 
         if (opts.EnableEmailPasswordFlow)
         {
@@ -72,11 +71,7 @@ public static class ServicesExtensions
             services.AddSingleton<IAuthEndpoint, ExternalChallengeEndpoint<TUser>>();
             services.AddSingleton<IAuthEndpoint, ExternalProvidersEndpoint<TUser>>();
             services.AddSingleton<IAuthEndpoint, SignInExternalEndpoint<TUser>>();
-
-            if (opts.EnableSignUp)
-            {
-                services.AddSingleton<IAuthEndpoint, SignUpExternalEndpoint<TUser, SignUpExternalRequest>>();
-            }
+            services.AddSingleton<IAccountEndpoint, LinkExternalLoginEndpoint<TUser>>();
         }
         
         services.AddSingleton<IAuthEndpoint, SignInRefreshEndpoint<TUser>>();
@@ -87,8 +82,17 @@ public static class ServicesExtensions
         var identityBuilder = services
             .AddIdentityCore<TUser>()
             .AddSignInManager<AufySignInManager<TUser>>()
+            .AddUserManager<AufyUserManager<TUser>>()
             .AddRoles<IdentityRole>()
             .AddDefaultTokenProviders();
+
+        services.AddScoped<IAufyUserManager>(sp => sp.GetRequiredService<AufyUserManager<TUser>>());
+
+        services.Configure<IdentityOptions>(options =>
+        {
+            options.SignIn.RequireConfirmedEmail = true;
+            options.User.RequireUniqueEmail = true;
+        });
 
         var authenticationBuilder = services
             .AddAuthorization()
@@ -136,7 +140,6 @@ public static class ServicesExtensions
                 o.Cookie.HttpOnly = true;
                 o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                 o.ExpireTimeSpan = TimeSpan.FromSeconds(60);
-                o.Cookie.Path = opts.AuthApiBasePath + "/signin/external";
                 o.Cookie.Name = AufyAuthSchemeDefaults.SignInExternalScheme;
             })
             .AddCookie(AufyAuthSchemeDefaults.SignUpExternalScheme, o =>
