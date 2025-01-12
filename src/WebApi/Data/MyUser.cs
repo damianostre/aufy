@@ -11,4 +11,6 @@ public class MyUser: IdentityUser, IAufyUser
 
     [NotMapped]
     public string? MySiteUrl { get; set; }
+
+    public IList<IdentityRole> Roles { get; } = new List<IdentityRole>();
 }

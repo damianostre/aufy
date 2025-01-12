@@ -5,5 +5,5 @@ namespace TestWebApi.Data;
 
 public class TestUser : IdentityUser, IAufyUser
 {
-    
+    public IList<IdentityRole> Roles { get; }
 }

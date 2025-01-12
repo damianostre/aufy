@@ -14,6 +14,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(builder);
         
-        builder.ApplyAufyModel();
+        builder.ApplyAufyModel<TestUser>();
     }
 }
