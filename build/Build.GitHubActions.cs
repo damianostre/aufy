@@ -2,7 +2,7 @@
 
 [GitHubActions(
     "build",
-    GitHubActionsImage.UbuntuLatest,
+    GitHubActionsImage.Ubuntu2204,
     OnPushBranches = ["main"],
     OnPushTags = ["v*.*.*"],
     OnPushIncludePaths = ["**/*"],
