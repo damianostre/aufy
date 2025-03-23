@@ -30,11 +30,11 @@ on:
       - '!readme.md'
 
 jobs:
-  ubuntu-latest:
-    name: ubuntu-latest
-    runs-on: ubuntu-latest
+  ubuntu-22_04:
+    name: ubuntu-22_04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: 'Run: Compile, Publish'
         run: ./build.cmd Compile Publish
         env:
