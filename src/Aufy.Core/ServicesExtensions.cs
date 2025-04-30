@@ -44,16 +44,11 @@ public static class ServicesExtensions
             o.SigningKey = opts.JwtBearer.SigningKey;
         });
 
-        services.AddScoped<IRefreshTokenManager, RefreshTokenManager>();
-        services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAufyEmailSenderManager<TUser>, AufyEmailSenderManager<TUser>>();
 
         if (opts.EnableEmailPasswordFlow)
         {
             services.AddSingleton<IAuthEndpoint, SignInEndpoint<TUser>>();
-            services.AddSingleton<IAuthEndpoint, TokenRefreshEndpoint<TUser>>();
-            services.AddSingleton<IAuthEndpoint, TokenEndpoint<TUser>>();
-            
             services.AddSingleton<IAccountEndpoint, PasswordForgotEndpoint<TUser>>();
             services.AddSingleton<IAccountEndpoint, PasswordResetEndpoint<TUser>>();
             services.AddSingleton<IAccountEndpoint, PasswordChangeEndpoint<TUser>>();
@@ -74,7 +69,6 @@ public static class ServicesExtensions
             services.AddSingleton<IAccountEndpoint, LinkExternalLoginEndpoint<TUser>>();
         }
         
-        services.AddSingleton<IAuthEndpoint, SignInRefreshEndpoint<TUser>>();
         services.AddSingleton<IAuthEndpoint, SignOutEndpoint<TUser>>();
         services.AddSingleton<IAuthEndpoint, WhoAmIEndpoint<TUser>>();
         services.AddSingleton<IAccountEndpoint, AccountInfoEndpoint<TUser>>();
@@ -97,41 +91,6 @@ public static class ServicesExtensions
         var authenticationBuilder = services
             .AddAuthorization()
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme,
-                o =>
-                {
-                    o.Events ??= new JwtBearerEvents();
-                    o.Events.OnMessageReceived = context =>
-                    {
-                        if (context.Request.Cookies.TryGetValue(AufyAuthSchemeDefaults.AccessTokenCookieName,
-                                out var token))
-                        {
-                            context.Token = token;
-                        }
-
-                        return Task.CompletedTask;
-                    };
-                    o.ConfigureBearerAuth(opts.JwtBearer);
-                })
-            .AddScheme<AufyJwtBearerOptions, AufySignInJwtBearerHandler>(
-                AufyAuthSchemeDefaults.BearerSignInScheme, _ => { })
-            .AddScheme<AufyJwtBearerOptions, AufyTokenJwtBearerHandler>(
-                AufyAuthSchemeDefaults.BearerTokenScheme, _ => { })
-            .AddJwtBearer(AufyAuthSchemeDefaults.RefreshTokenScheme, o =>
-            {
-                o.Events ??= new JwtBearerEvents();
-                o.Events.OnMessageReceived = context =>
-                {
-                    if (context.Request.Cookies.TryGetValue(AufyAuthSchemeDefaults.RefreshTokenCookieName,
-                            out var token))
-                    {
-                        context.Token = token;
-                    }
-
-                    return Task.CompletedTask;
-                };
-                o.ConfigureBearerAuth(opts.JwtBearer);
-            })
             .AddScheme<PolicySchemeOptions, AufyPolicySignInExternalHandler>(
                 AufyAuthSchemeDefaults.SignInExternalPolicyScheme, _ => { })
             .AddCookie(AufyAuthSchemeDefaults.SignInExternalScheme, o =>
@@ -152,6 +111,8 @@ public static class ServicesExtensions
                 o.Cookie.Name = AufyAuthSchemeDefaults.SignUpExternalScheme;
             });
 
-        return new AufyServiceBuilder<TUser>(services, opts, identityBuilder, authenticationBuilder, configuration);
+        var builder = new AufyServiceBuilder<TUser>(services, opts, identityBuilder, authenticationBuilder, configuration);
+
+        return builder;
     }
 }

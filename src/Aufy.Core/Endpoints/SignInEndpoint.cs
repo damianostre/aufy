@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Aufy.Core.AuthSchemes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

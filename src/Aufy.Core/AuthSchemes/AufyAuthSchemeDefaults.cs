@@ -2,6 +2,7 @@
 
 public static class AufyAuthSchemeDefaults
 {
+    public const string MultiScheme = "Aufy.MultiScheme";
     public const string BearerSignInScheme = "Aufy.BearerSignInCookieScheme";
     public const string BearerTokenScheme = "Aufy.BearerSignInTokenScheme";
     public const string RefreshTokenScheme = "Aufy.RefreshToken";

@@ -25,6 +25,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services
     .AddAufy<MyUser>(builder.Configuration)
+    // .AddJwtBearer()
     .AddProvider(GitHubAuthenticationDefaults.AuthenticationScheme, (auth, options) =>
     {
         auth.AddGitHub(o => o.Configure(GitHubAuthenticationDefaults.AuthenticationScheme, options));

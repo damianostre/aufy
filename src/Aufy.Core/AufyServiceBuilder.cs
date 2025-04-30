@@ -1,6 +1,8 @@
 ﻿using Aufy.Core.AuthSchemes;
 using Aufy.Core.Endpoints;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +22,8 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
     public IServiceCollection Services { get; private set; }
     public IConfiguration Configuration { get; private set; }
 
+    private string? AuthSchemeAdded { get; set; } = null;
+
     internal AufyServiceBuilder(
         IServiceCollection services,
         AufyOptions aufyOptions,
@@ -32,6 +36,114 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
         IdentityBuilder = identityBuilder;
         Configuration = configuration;
         AuthenticationBuilder = authenticationBuilder;
+    }
+
+    private void SetDefaultScheme(string schemeName)
+    {
+        if (AuthSchemeAdded is null)
+        {
+            AuthSchemeAdded = schemeName;
+            Services.AddAuthentication(schemeName);
+
+            return;
+        }
+
+        if (AuthSchemeAdded != schemeName)
+        {
+            var multiScheme = AufyAuthSchemeDefaults.MultiScheme;
+            Services
+                .AddAuthentication(multiScheme)
+                .AddScheme<PolicySchemeOptions, AufyMultiDefaultPolicySchemeHandler>(
+                    multiScheme, o =>
+                    {
+                        o.ForwardDefault = JwtBearerDefaults.AuthenticationScheme;
+                        o.ForwardAuthenticate = multiScheme;
+                    });
+        }
+    }
+
+    /// <summary>
+    /// Registers JWT Bearer authentication schemes
+    /// </summary>
+    /// <returns>The <see cref="AufyServiceBuilder{TUser}"/>.</returns>
+    public AufyServiceBuilder<TUser> AddJwtBearer(Action<JwtBearerOptions>? options = null)
+    {
+        Services.AddScoped<IRefreshTokenManager, RefreshTokenManager>();
+        Services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+        var schemeName = JwtBearerDefaults.AuthenticationScheme;
+        SetDefaultScheme(schemeName);
+
+        AuthenticationBuilder
+            .AddJwtBearer(schemeName,
+                o =>
+                {
+                    o.Events ??= new JwtBearerEvents();
+                    o.Events.OnMessageReceived = context =>
+                    {
+                        if (context.Request.Cookies.TryGetValue(AufyAuthSchemeDefaults.AccessTokenCookieName,
+                                out var token))
+                        {
+                            context.Token = token;
+                        }
+
+                        return Task.CompletedTask;
+                    };
+                    o.ConfigureBearerAuth(AufyOptions.JwtBearer);
+                    options?.Invoke(o);
+                })
+            .AddScheme<AufyJwtBearerOptions, AufySignInJwtBearerHandler>(
+                AufyAuthSchemeDefaults.BearerSignInScheme, _ => { })
+            .AddScheme<AufyJwtBearerOptions, AufyTokenJwtBearerHandler>(
+                AufyAuthSchemeDefaults.BearerTokenScheme, _ => { })
+            .AddJwtBearer(AufyAuthSchemeDefaults.RefreshTokenScheme, o =>
+            {
+                o.Events ??= new JwtBearerEvents();
+                o.Events.OnMessageReceived = context =>
+                {
+                    if (context.Request.Cookies.TryGetValue(AufyAuthSchemeDefaults.RefreshTokenCookieName,
+                            out var token))
+                    {
+                        context.Token = token;
+                    }
+
+                    return Task.CompletedTask;
+                };
+                o.ConfigureBearerAuth(AufyOptions.JwtBearer);
+            });
+
+        // Register JWT token-specific endpoints
+        if (AufyOptions.EnableEmailPasswordFlow)
+        {
+            Services.AddSingleton<IAuthEndpoint, TokenRefreshEndpoint<TUser>>();
+            Services.AddSingleton<IAuthEndpoint, TokenEndpoint<TUser>>();
+        }
+
+        Services.AddSingleton<IAuthEndpoint, SignInRefreshEndpoint<TUser>>();
+        
+        return this;
+    }
+
+    /// <summary>
+    /// Registers Classic Cookie authentication scheme.
+    /// </summary>
+    /// <returns>The <see cref="AufyServiceBuilder{TUser}"/>.</returns>
+    public AufyServiceBuilder<TUser> AddCookie(Action<CookieAuthenticationOptions>? options = null)
+    {
+        var schemeName = CookieAuthenticationDefaults.AuthenticationScheme;
+        SetDefaultScheme(schemeName);
+
+        AuthenticationBuilder
+            .AddCookie(schemeName, o =>
+            {
+                o.LoginPath = "/signin";
+                o.LogoutPath = "/signout";
+                o.AccessDeniedPath = "/";
+
+                options?.Invoke(o);
+            });
+
+        return this;
     }
 
     public AufyServiceBuilder<TUser> ConfigureIdentity(Action<IdentityBuilder> configure)
@@ -60,15 +172,14 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
             return this;
         }
 
-        Services.AddCors(opts => opts.AddDefaultPolicy(
-            policy =>
-            {
-                policy.WithOrigins(clientAppUrl)
-                    .AllowCredentials()
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .WithExposedHeaders("X-Token-Expired");
-            }));
+        Services.AddCors(opts => opts.AddDefaultPolicy(policy =>
+        {
+            policy.WithOrigins(clientAppUrl)
+                .AllowCredentials()
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .WithExposedHeaders("X-Token-Expired");
+        }));
 
         return this;
     }
@@ -81,9 +192,9 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
     /// <exception cref="Exception"></exception>
     public AufyServiceBuilder<TUser> UseSignUpModel<TSignUpRequest>() where TSignUpRequest : SignUpRequest
     {
-        var descriptor = Services.FirstOrDefault(
-            d => d.ServiceType == typeof(IAuthEndpoint) &&
-                 d.ImplementationType == typeof(SignUpEndpoint<TUser, SignUpRequest>));
+        var descriptor = Services.FirstOrDefault(d => d.ServiceType == typeof(IAuthEndpoint) &&
+                                                      d.ImplementationType ==
+                                                      typeof(SignUpEndpoint<TUser, SignUpRequest>));
         if (descriptor is null)
         {
             throw new(
@@ -113,13 +224,12 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
         AufyOptions.Internal.CustomExternalSignUpFlow = true;
         return this;
     }
-    
-    public AufyServiceBuilder<TUser> AddProvider(string provider, Action<AuthenticationBuilder, AufyOptions> authBuilder)
+
+    public AufyServiceBuilder<TUser> AddProvider(string provider,
+        Action<AuthenticationBuilder, AufyOptions> authBuilder)
     {
-        AuthenticationBuilder.AddProviderIfConfigured(provider, AufyOptions, b =>
-        {
-            authBuilder?.Invoke(b, AufyOptions);
-        });
+        AuthenticationBuilder.AddProviderIfConfigured(provider, AufyOptions,
+            b => { authBuilder?.Invoke(b, AufyOptions); });
 
         return this;
     }
