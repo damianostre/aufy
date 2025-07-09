@@ -90,7 +90,7 @@ public static class ServicesExtensions
 
         var authenticationBuilder = services
             .AddAuthorization()
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddAuthentication()
             .AddScheme<PolicySchemeOptions, AufyPolicySignInExternalHandler>(
                 AufyAuthSchemeDefaults.SignInExternalPolicyScheme, _ => { })
             .AddCookie(AufyAuthSchemeDefaults.SignInExternalScheme, o =>
