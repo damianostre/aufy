@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using Aufy.Core.AuthSchemes;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -39,8 +40,11 @@ public class TokenRefreshEndpoint<TUser> : IAuthEndpoint where TUser : IdentityU
                         return TypedResults.Unauthorized();
                     }
 
-                    return TypedResults.SignIn(context.User,
-                        authenticationScheme: AufyAuthSchemeDefaults.BearerTokenScheme);
+                    return TypedResults.SignIn(
+                        context.User,
+                        // TODO how to pass properties?
+                        properties: new AuthenticationProperties { Parameters = { ["useCookie"] = true } },
+                        authenticationScheme: AufyAuthSchemeDefaults.BearerSignInScheme);
                 })
             .RequireAuthorization(b =>
             {

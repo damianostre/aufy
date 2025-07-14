@@ -14,7 +14,7 @@ public class AccessTokenResponse
     public long ExpiresIn { get; set; }
     
     [JsonPropertyName("refresh_token")]
-    public string? RefreshToken { get; set; }
+    public required string RefreshToken { get; set; }
 }
 
 [JsonSerializable(typeof(AccessTokenResponse))]

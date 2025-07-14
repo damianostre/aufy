@@ -51,7 +51,7 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
         // Register policy scheme handler only if multi scheme auth is used
         if (scheme != DefaultAuthScheme.JwtBearerOrCookie)
         {
-            AuthenticationBuilder.AddScheme<PolicySchemeOptions, AufyPolicySignInExternalHandler>(schemeName, _ => { });
+            AuthenticationBuilder.AddScheme<PolicySchemeOptions, AufySignInExternalPolicyHandler>(schemeName, _ => { });
         }
 
         return this;
@@ -88,8 +88,6 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
                 })
             .AddScheme<AufyJwtBearerOptions, AufySignInJwtBearerHandler>(
                 AufyAuthSchemeDefaults.BearerSignInScheme, _ => { })
-            .AddScheme<AufyJwtBearerOptions, AufyTokenJwtBearerHandler>(
-                AufyAuthSchemeDefaults.BearerTokenScheme, _ => { })
             .AddJwtBearer(AufyAuthSchemeDefaults.RefreshTokenScheme, o =>
             {
                 o.Events ??= new JwtBearerEvents();
@@ -113,7 +111,6 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
         }
 
         Services.AddSingleton<IAuthEndpoint, TokenRefreshEndpoint<TUser>>();
-        Services.AddSingleton<IAuthEndpoint, SignInRefreshEndpoint<TUser>>();
         
         return this;
     }

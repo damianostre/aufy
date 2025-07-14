@@ -26,7 +26,7 @@ public class TokenEndpoint<TUser> : IAuthEndpoint where TUser : class, IAufyUser
                 ArgumentException.ThrowIfNullOrWhiteSpace(req.Email);
                 ArgumentException.ThrowIfNullOrWhiteSpace(req.Password);
                 
-                manager.AuthenticationScheme = AufyAuthSchemeDefaults.BearerTokenScheme;
+                manager.AuthenticationScheme = AufyAuthSchemeDefaults.BearerSignInScheme;
 
                 var result =
                     await manager.PasswordSignInAsync(req.Email, req.Password, isPersistent: false, lockoutOnFailure: true);

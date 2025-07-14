@@ -42,8 +42,7 @@ public class SignInEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, I
                     logger.LogInformation("User {Email} failed to sign in. Reason: User not found", req.Email);
                     return TypedResults.Problem(SignInResult.Failed.ToValidationProblem());
                 }
-                
-                signInManager.UseCookie = useCookie ?? false;
+
                 var result = await signInManager.PasswordSignInAsync(
                     user, req.Password, isPersistent: false, lockoutOnFailure: true);
                 

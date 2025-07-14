@@ -55,6 +55,7 @@ public class AufySignInJwtBearerHandler(
         {
             AccessToken = useCookie ? null : token,
             ExpiresIn = (long)(expiresAt - DateTime.UtcNow).TotalSeconds,
+            RefreshToken = refreshJwtToken
         };
 
         await Context.Response.WriteAsJsonAsync(

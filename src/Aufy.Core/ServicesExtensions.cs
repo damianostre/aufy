@@ -91,7 +91,7 @@ public static class ServicesExtensions
         var authenticationBuilder = services
             .AddAuthorization()
             .AddAuthentication()
-            .AddScheme<PolicySchemeOptions, AufyPolicySignInExternalHandler>(
+            .AddScheme<PolicySchemeOptions, AufySignInExternalPolicyHandler>(
                 AufyAuthSchemeDefaults.SignInExternalPolicyScheme, _ => { })
             .AddCookie(AufyAuthSchemeDefaults.SignInExternalScheme, o =>
             {

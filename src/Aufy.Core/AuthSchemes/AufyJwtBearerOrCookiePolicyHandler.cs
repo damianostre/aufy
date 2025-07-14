@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 
 namespace Aufy.Core.AuthSchemes;
 
-sealed class AufyJwtBearerOrCookieSchemeHandler(
+sealed class AufyJwtBearerOrCookiePolicyHandler(
     IOptionsMonitor<PolicySchemeOptions> options,
     ILoggerFactory logger,
     UrlEncoder encoder)

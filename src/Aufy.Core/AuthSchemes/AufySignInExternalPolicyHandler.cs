@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace Aufy.Core.AuthSchemes;
 
-public class AufyPolicySignInExternalHandler(
+public class AufySignInExternalPolicyHandler(
     IOptionsMonitor<PolicySchemeOptions> options,
     ILoggerFactory logger,
     UrlEncoder encoder)
