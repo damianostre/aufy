@@ -30,49 +30,23 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                     IOptions<AufyOptions> options,
                     HttpContext context) =>
                 {
-                    await context.SignOutAsync(AufyAuthSchemeDefaults.SignInExternalScheme);
-                    await context.SignOutAsync(AufyAuthSchemeDefaults.SignUpExternalScheme);
-
-                    // This shouldn't be reachable if the sign up is disabled
                     if (options.Value.EnableSignUp is false)
                     {
                         logger.LogError("Sign up is disabled, endpoint should not be reachable");
                         return TypedResults.Problem("Error occurred");
                     }
 
-                    // This shouldn't be reachable if the custom flow is disabled
                     if (AufyOptions.Internal.CustomExternalSignUpFlow is false)
                     {
                         logger.LogError("Custom external sign up flow is disabled, endpoint should not be reachable");
                         return TypedResults.Problem("Error occurred");
                     }
 
-                    if (claimsPrincipal.Identity?.AuthenticationType is null)
-                    {
-                        logger.LogInformation("Usser {UserId} has no authentication type",
-                            claimsPrincipal.Identity?.Name);
-                        return TypedResults.Unauthorized();
-                    }
+                    var (user, problem) = await userManager.HandleExternalAuthAsync(
+                        claimsPrincipal,
+                        context,
+                        signUpModel: req);
 
-                    var providerKey = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
-                    if (providerKey is null)
-                    {
-                        throw new("NameIdentifier claim is missing");
-                    }
-
-                    var loginUser = await userManager.FindByLoginAsync(
-                        claimsPrincipal.Identity.AuthenticationType,
-                        providerKey);
-                    if (loginUser is not null)
-                    {
-                        logger.LogInformation(
-                            "User {UserId} already has an account",
-                            claimsPrincipal.Identity.Name);
-                        return TypedResults.Problem("There was an error creating user");
-                    }
-
-                    var (user, problem) = await userManager.CreateUserWithLoginAsync(
-                        providerKey, context, req, claimsPrincipal);
                     if (problem is not null)
                     {
                         return problem;
@@ -80,10 +54,10 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
 
                     if (user is null)
                     {
-                        return TypedResults.Problem("There was an error creating user");
+                        logger.LogError("User is null after handling external auth");
+                        return TypedResults.Problem("Error occurred");
                     }
 
-                    signInManager.UseCookie = useCookie ?? false;
                     await signInManager.SignInAsync(user, new AuthenticationProperties(),
                         claimsPrincipal.Identity.AuthenticationType);
 
@@ -96,43 +70,4 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                 b.AddAuthenticationSchemes(AufyAuthSchemeDefaults.SignUpExternalScheme);
             });
     }
-}
-
-/// <summary>
-/// Extension point for the SignUpExternalEndpoint.
-/// </summary>
-/// <typeparam name="TUser"></typeparam>
-/// <typeparam name="TModel"></typeparam>
-public interface ISignUpExternalEndpointEvents<TUser, TModel>
-    where TModel : class
-    where TUser : IAufyUser, new()
-{
-    /// <summary>
-    /// Called when a user is being created. <br/>
-    /// Return a ProblemHttpResult if the user can't be created.
-    /// </summary>
-    /// <param name="model"></param>
-    /// <param name="httpRequest"></param>
-    /// <param name="user"></param>
-    /// <returns></returns>
-    Task<ProblemHttpResult?> UserCreatingAsync(TModel model, HttpRequest httpRequest, TUser user)
-    {
-        return Task.FromResult<ProblemHttpResult?>(null);
-    }
-
-    /// <summary>
-    /// Called when a user is created and saved to the database.
-    /// </summary>
-    /// <param name="model"></param>
-    /// <param name="httpRequest"></param>
-    /// <param name="user"></param>
-    /// <returns></returns>
-    Task UserCreatedAsync(TModel model, HttpRequest httpRequest, TUser user)
-    {
-        return Task.CompletedTask;
-    }
-}
-
-public class SignUpExternalRequest
-{
 }

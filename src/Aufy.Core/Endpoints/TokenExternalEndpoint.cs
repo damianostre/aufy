@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Aufy.Core.AuthSchemes;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Aufy.Core.Endpoints;
 
-public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, IAufyUser, new()
+public class TokenExternalEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, IAufyUser, new()
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {
