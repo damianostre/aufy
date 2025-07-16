@@ -194,7 +194,7 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             EmailConfirmed = false,
         };
 
-        var events = _serviceProvider.GetService<ISignUpExternalEndpointEvents<TUser, TModel>>();
+        var events = _serviceProvider.GetService<ISignUpEndpointEvents<TUser, TModel>>();
         if (events is not null)
         {
             var userCreatingProblem = await events.UserCreatingAsync(req, context.Request, user);
@@ -297,14 +297,7 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             }
         }
 
-        if (AufyOptions.Internal.CustomExternalSignUpFlow && signUpModel is null)
-        {
-            _logger.LogInformation("Cannot create user as custom external sign up flow is required but no model provided");
-            return (null, TypedResults.Problem("User not found"));
-        }
-
         var (newUser, createProblem) = await CreateUserWithLoginAsync(providerKey, context, signUpModel, claimsPrincipal);
-        
         if (createProblem is not null)
         {
             return (null, createProblem);
