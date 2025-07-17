@@ -42,7 +42,7 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                         return TypedResults.Problem("Error occurred");
                     }
 
-                    var (user, problem) = await userManager.HandleExternalAuthAsync(
+                    var (user, problem) = await signInManager.HandleExternalAuthAsync(
                         claimsPrincipal,
                         context,
                         signUpModel: req);

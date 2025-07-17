@@ -44,10 +44,10 @@ public class SignUpEndpoint<TUser, TModel> : IAuthEndpoint where TModel : SignUp
                         Email = req.Email,
                     };
 
-                    var events = serviceProvider.GetService<ISignUpEndpointEvents<TUser, TModel>>();
+                    var events = serviceProvider.GetService<ISignUpEvents<TUser, TModel>>();
                     if (events is not null)
                     {
-                        var userCreatingRes = await events.UserCreatingAsync(req, httpRequest, user);
+                        var userCreatingRes = await events.UserCreatingAsync(user, req, httpRequest);
                         if (userCreatingRes is not null)
                         {
                             return userCreatingRes;
@@ -70,7 +70,7 @@ public class SignUpEndpoint<TUser, TModel> : IAuthEndpoint where TModel : SignUp
 
                     if (events is not null)
                     {
-                        await events.UserCreatedAsync(req, httpRequest, user);
+                        await events.UserCreatedAsync(user, req, httpRequest);
                     }
 
                     logger.LogInformation("User: {Email} created a new account with password", req.Email);
@@ -91,39 +91,6 @@ public class SignUpEndpoint<TUser, TModel> : IAuthEndpoint where TModel : SignUp
                 })
             .AddEndpointFilter<ValidationEndpointFilter<TModel>>()
             .AllowAnonymous();
-    }
-}
-
-/// <summary>
-/// Extension point for the SignUpEndpoint.
-/// </summary>
-/// <typeparam name="TUser"></typeparam>
-/// <typeparam name="TModel"></typeparam>
-public interface ISignUpEndpointEvents<in TUser, in TModel> where TUser : IAufyUser
-{
-    /// <summary>
-    /// Called when a user is being created. <br/>
-    /// Return a ProblemHttpResult if the user can't be created.
-    /// </summary>
-    /// <param name="model"></param>
-    /// <param name="httpRequest"></param>
-    /// <param name="user"></param>
-    /// <returns></returns>
-    Task<ProblemHttpResult?> UserCreatingAsync(TModel model, HttpRequest httpRequest, TUser user)
-    {
-        return Task.FromResult<ProblemHttpResult?>(null);
-    }
-    
-    /// <summary>
-    /// Called when a user is created and saved to the database.
-    /// </summary>
-    /// <param name="model"></param>
-    /// <param name="httpRequest"></param>
-    /// <param name="user"></param>
-    /// <returns></returns>
-    Task UserCreatedAsync(TModel model, HttpRequest httpRequest, TUser user)
-    {
-        return Task.CompletedTask;
     }
 }
 

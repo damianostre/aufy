@@ -24,7 +24,7 @@ public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identit
                     HttpContext context,
                     ClaimsPrincipal claimsPrincipal) =>
                 {                   
-                    var (user, problem) = await userManager.HandleExternalAuthAsync(
+                    var (user, problem) = await signInManager.HandleExternalAuthAsync(
                         claimsPrincipal,
                         context,
                         signUpModel: new DefaultSignupExternalRequest());

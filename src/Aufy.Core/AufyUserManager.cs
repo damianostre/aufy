@@ -11,42 +11,49 @@ using Microsoft.Extensions.Options;
 
 namespace Aufy.Core;
 
-public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
+public class AufyUserManager<TUser>(
+    IOptions<AufyOptions> options,
+    IUserStore<TUser> store,
+    IOptions<IdentityOptions> optionsAccessor,
+    IPasswordHasher<TUser> passwordHasher,
+    IEnumerable<IUserValidator<TUser>> userValidators,
+    IEnumerable<IPasswordValidator<TUser>> passwordValidators,
+    ILookupNormalizer keyNormalizer,
+    IdentityErrorDescriber errors,
+    IServiceProvider services,
+    ILogger<AufyUserManager<TUser>> logger,
+    IAuthenticationSchemeProvider schemes)
+    : UserManager<TUser>(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer,
+        errors, services, logger), IAufyUserManager
     where TUser : IdentityUser, IAufyUser, new()
 {
-    private readonly IOptions<AufyOptions> _options;
-    private readonly ILogger<AufyUserManager<TUser>> _logger;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IAuthenticationSchemeProvider _schemes;
+    private readonly IServiceProvider _serviceProvider = services;
 
     public async Task<(bool result, string? error)> ShouldUseExternalSignUpFlow(ClaimsIdentity identity)
     {
         var (result, error) = await CheckLogin(identity);
         if (error is not null || result is null)
         {
-            _logger.LogError("Error checking login: {Error}", error);
+            logger.LogError("Error checking login: {Error}", error);
             return (false, error ?? "Error occurred");
         }
 
         var (_, user) = result;
         if (user is not null)
         {
-            _logger.LogInformation("User already exists, should not sign up");
+            logger.LogInformation("User already exists, should not sign up");
             return (false, null);
         }
 
-        // If custom external signup flow is disabled, we use only sign in endpoint
         if (AufyOptions.Internal.CustomExternalSignUpFlow is false)
         {
             return (false, null);
         }
-
-        //
-        if (_options.Value.AutoAccountLinking is false)
+        
+        if (options.Value.AutoAccountLinking is false)
         {
             return (false, null);
         }
-
 
         var userToLink = await FindUserToLinkLogin(identity);
         if (userToLink is not null)
@@ -68,7 +75,7 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
         var (providerKey, userWithLogin) = checkLoginResult;
         if (userWithLogin is not null)
         {
-            _logger.LogInformation("Cannot link login, user already exists. User: {UserId}", userWithLogin.Id);
+            logger.LogInformation("Cannot link login, user already exists. User: {UserId}", userWithLogin.Id);
             return (null, null);
         }
 
@@ -83,7 +90,7 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             return (null, "AuthenticationType is missing in identity");
         }
 
-        var scheme = await _schemes.GetSchemeAsync(identity.AuthenticationType);
+        var scheme = await schemes.GetSchemeAsync(identity.AuthenticationType);
         if (scheme is null)
         {
             return (null, $"Cannot find scheme {identity.AuthenticationType}");
@@ -93,7 +100,7 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             userToLink, new UserLoginInfo(scheme.Name, providerKey, scheme.DisplayName));
         if (!result.Succeeded)
         {
-            _logger.LogError(
+            logger.LogError(
                 "Failed to add login info to user {UserId}: {Errors}",
                 userToLink.Id,
                 string.Join(", ", result.Errors.Select(e => e.Description)));
@@ -114,7 +121,7 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
         var (providerKey, user) = checkLoginResult;
         if (user is not null)
         {
-            _logger.LogInformation("Cannot link login, user already exists. User: {UserId}", user.Id);
+            logger.LogInformation("Cannot link login, user already exists. User: {UserId}", user.Id);
             return (null, null);
         }
 
@@ -124,13 +131,12 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             return (null, null);
         }
 
-
         if (identity.AuthenticationType is null)
         {
             return (null, "AuthenticationType is missing in identity");
         }
 
-        var scheme = await _schemes.GetSchemeAsync(identity.AuthenticationType);
+        var scheme = await schemes.GetSchemeAsync(identity.AuthenticationType);
         if (scheme is null)
         {
             return (null, $"Cannot find scheme {identity.AuthenticationType}");
@@ -140,7 +146,7 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             userToLink, new UserLoginInfo(scheme.Name, providerKey, scheme.DisplayName));
         if (!result.Succeeded)
         {
-            _logger.LogError(
+            logger.LogError(
                 "Failed to add login info to user {UserId}: {Errors}",
                 userToLink.Id,
                 string.Join(", ", result.Errors.Select(e => e.Description)));
@@ -194,10 +200,10 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             EmailConfirmed = false,
         };
 
-        var events = _serviceProvider.GetService<ISignUpEndpointEvents<TUser, TModel>>();
+        var events = _serviceProvider.GetService<ISignUpEvents<TUser, TModel>>();
         if (events is not null)
         {
-            var userCreatingProblem = await events.UserCreatingAsync(req, context.Request, user);
+            var userCreatingProblem = await events.UserCreatingAsync(user, req, context.Request);
             if (userCreatingProblem is not null)
             {
                 return (null, userCreatingProblem);
@@ -207,17 +213,17 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
         var result = await CreateAsync(user);
         if (!result.Succeeded)
         {
-            _logger.LogError("Error creating user: {Email}. Result: {Result}", user.Email, result);
+            logger.LogError("Error creating user: {Email}. Result: {Result}", user.Email, result);
             return (null, TypedResults.Problem(result.ToValidationProblem()));
         }
 
         if (claimsPrincipal.Identity?.AuthenticationType is null)
         {
-            _logger.LogInformation("User {UserId} has no authentication type", claimsPrincipal.Identity?.Name);
+            logger.LogInformation("User {UserId} has no authentication type", claimsPrincipal.Identity?.Name);
             return (null, TypedResults.Problem("There was an error creating user"));
         }
 
-        var scheme = await _schemes.GetSchemeAsync(claimsPrincipal.Identity.AuthenticationType);
+        var scheme = await schemes.GetSchemeAsync(claimsPrincipal.Identity.AuthenticationType);
         result = await AddLoginAsync(
             user,
             new UserLoginInfo(
@@ -227,7 +233,7 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
 
         if (!result.Succeeded)
         {
-            _logger.LogError(
+            logger.LogError(
                 "Failed to add login info to user {UserId}: {Errors}",
                 user.Id,
                 string.Join(", ", result.Errors.Select(e => e.Description)));
@@ -235,101 +241,19 @@ public class AufyUserManager<TUser> : UserManager<TUser>, IAufyUserManager
             return (null, TypedResults.Problem("There was an error creating user"));
         }
 
-        result = await AddToRolesAsync(user, _options.Value.DefaultRoles);
+        result = await AddToRolesAsync(user, options.Value.DefaultRoles);
         if (!result.Succeeded)
         {
-            _logger.LogError("Error adding user to roles: {Result}", result);
+            logger.LogError("Error adding user to roles: {Result}", result);
             return (null, TypedResults.Problem("Error occured", statusCode: 500));
         }
 
         if (events is not null)
         {
-            await events.UserCreatedAsync(req, context.Request, user);
+            await events.UserCreatedAsync(user, req, context.Request);
         }
 
         return (user, null);
-    }
-
-    public async Task<(TUser? user, ProblemHttpResult? problem)> HandleExternalAuthAsync<TModel>(
-        ClaimsPrincipal claimsPrincipal,
-        HttpContext context,
-        TModel signUpModel) where TModel : class
-    {
-        await context.SignOutAsync(AufyAuthSchemeDefaults.SignInExternalScheme);
-        await context.SignOutAsync(AufyAuthSchemeDefaults.SignUpExternalScheme);
-
-        if (claimsPrincipal.Identity?.AuthenticationType is null)
-        {
-            _logger.LogInformation("User has no authentication type");
-            return (null, TypedResults.Problem("Authentication type is missing"));
-        }
-
-        var (checkLoginResult, checkError) = await CheckLogin(claimsPrincipal.Identity as ClaimsIdentity);
-        if (checkError is not null || checkLoginResult is null)
-        {
-            _logger.LogError("Error checking login: {Error}", checkError);
-            return (null, TypedResults.Problem("Error occurred"));
-        }
-
-        var (providerKey, existingUser) = checkLoginResult;
-        if (existingUser is not null)
-        {
-            return (existingUser, null);
-        }
-        
-        if (!_options.Value.EnableSignUp)
-        {
-            return (null, TypedResults.Problem("Sign up is disabled"));
-        }
-
-        if (_options.Value.AutoAccountLinking)
-        {
-            var (linkedUser, linkError) = await TryAutoLinkLoginAsync(claimsPrincipal.Identity as ClaimsIdentity);
-            if (linkError is not null)
-            {
-                _logger.LogError("Error linking login: {Error}", linkError);
-                return (null, TypedResults.Problem("Error occurred"));
-            }
-            
-            if (linkedUser is not null)
-            {
-                return (linkedUser, null);
-            }
-        }
-
-        var (newUser, createProblem) = await CreateUserWithLoginAsync(providerKey, context, signUpModel, claimsPrincipal);
-        if (createProblem is not null)
-        {
-            return (null, createProblem);
-        }
-
-        if (newUser is null)
-        {
-            _logger.LogError("Failed to create user");
-            return (null, TypedResults.Problem("Error occurred"));
-        }
-
-        return (newUser, null);
-    }
-
-    public AufyUserManager(
-        IOptions<AufyOptions> options,
-        IUserStore<TUser> store,
-        IOptions<IdentityOptions> optionsAccessor,
-        IPasswordHasher<TUser> passwordHasher,
-        IEnumerable<IUserValidator<TUser>> userValidators,
-        IEnumerable<IPasswordValidator<TUser>> passwordValidators,
-        ILookupNormalizer keyNormalizer,
-        IdentityErrorDescriber errors,
-        IServiceProvider services,
-        ILogger<AufyUserManager<TUser>> logger,
-        IAuthenticationSchemeProvider schemes)
-        : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger)
-    {
-        _options = options;
-        _logger = logger;
-        _schemes = schemes;
-        _serviceProvider = services;
     }
 }
 
