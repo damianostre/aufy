@@ -38,7 +38,7 @@ public static class ExternalLoginHelper
         oauth.ClientId = provider.ClientId ?? throw new($"ClientId for provider {scheme} is not configured");
         oauth.ClientSecret = provider.ClientSecret ?? throw new($"ClientSecret for provider {scheme} is not configured");
         oauth.CallbackPath = aufyOptions.AuthApiBasePath + "/external/callback/" + scheme.ToLower();
-        oauth.SignInScheme = AufyAuthSchemeDefaults.SignInExternalPolicyScheme;
+        oauth.SignInScheme = AufyIdentityConstants.ExternalCallbackPolicyScheme;
         
         foreach (var scope in provider.Scopes ?? [])
         {

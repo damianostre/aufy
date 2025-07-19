@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace Aufy.Core.AuthSchemes;
 
-public class AufySignInExternalPolicyHandler(
+public class AufyExternalCallbackPolicyHandler(
     IOptionsMonitor<PolicySchemeOptions> options,
     ILoggerFactory logger,
     UrlEncoder encoder)
@@ -28,13 +28,13 @@ public class AufySignInExternalPolicyHandler(
         if (signup)
         {
             return Context.SignInAsync(
-                AufyAuthSchemeDefaults.SignUpExternalScheme,
+                AufyIdentityConstants.ExternalSignUpScheme,
                 user,
                 properties);
         }
 
         return Context.SignInAsync(
-            AufyAuthSchemeDefaults.SignInExternalScheme,
+            AufyIdentityConstants.ExternalScheme,
             user,
             properties);
     }

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 
 namespace Aufy.Core.AuthSchemes;
 
-sealed class AufyJwtBearerOrCookiePolicyHandler(
+sealed class AufyBearerOrCookieSchemeHandler(
     IOptionsMonitor<PolicySchemeOptions> options,
     ILoggerFactory logger,
     UrlEncoder encoder)
@@ -24,6 +24,6 @@ sealed class AufyJwtBearerOrCookiePolicyHandler(
         }
 
         // Cookie auth will return AuthenticateResult.NoResult() like bearer auth just did if there is no cookie.
-        return await Context.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return await Context.AuthenticateAsync(AufyIdentityConstants.CookieScheme);
     }
 }

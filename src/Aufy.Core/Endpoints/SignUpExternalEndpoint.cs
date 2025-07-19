@@ -18,17 +18,16 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {
-        return builder.MapPost("/signup/external",
+        return builder.MapPost("/signup/external/{authMode}",
                 async Task<Results<SignInHttpResult, BadRequest, ProblemHttpResult, UnauthorizedHttpResult,
                     EmptyHttpResult>>
                 ([FromBody] TModel req,
-                    [FromQuery] bool? useCookie,
-                    [FromServices] AufyUserManager<TUser> userManager,
+                    [FromBody] SignUpExternalTokenInfo tokenInfo,
+                    [FromRoute] string authMode,
                     [FromServices] AufySignInManager<TUser> signInManager,
                     [FromServices] ILogger<SignUpExternalEndpoint<TUser, TModel>> logger,
                     ClaimsPrincipal claimsPrincipal,
-                    IOptions<AufyOptions> options,
-                    HttpContext context) =>
+                    IOptions<AufyOptions> options) =>
                 {
                     if (options.Value.EnableSignUp is false)
                     {
@@ -41,11 +40,9 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                         logger.LogError("Custom external sign up flow is disabled, endpoint should not be reachable");
                         return TypedResults.Problem("Error occurred");
                     }
-
+                    
                     var (user, problem) = await signInManager.HandleExternalAuthAsync(
-                        claimsPrincipal,
-                        context,
-                        signUpModel: req);
+                        claimsPrincipal, signUpModel: req);
 
                     if (problem is not null)
                     {
@@ -58,8 +55,24 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                         return TypedResults.Problem("Error occurred");
                     }
 
-                    await signInManager.SignInAsync(user, new AuthenticationProperties(),
-                        claimsPrincipal.Identity.AuthenticationType);
+                    var isCookieAuth = IsCookieAuth(authMode);
+                    var scheme = isCookieAuth ? AufyIdentityConstants.CookieScheme : AufyIdentityConstants.BearerSignInScheme;
+                    var properties = isCookieAuth switch
+                    {
+                        true => new AuthenticationProperties
+                        {
+                            IsPersistent = true
+                        },
+                        false => new AuthenticationProperties(
+                            null, 
+                            AufySignInJwtBearerHandler.BuildParameters(tokenInfo.SetTokenCookie, tokenInfo.SetRefreshTokenCookie))
+                    };
+
+                    await signInManager.SignInWith(
+                        scheme,
+                        user, 
+                        properties,
+                        claimsPrincipal.Identity?.AuthenticationType ?? "External");
 
                     return TypedResults.Empty;
                 })
@@ -67,7 +80,30 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
             .RequireAuthorization(b =>
             {
                 b.RequireAuthenticatedUser();
-                b.AddAuthenticationSchemes(AufyAuthSchemeDefaults.SignUpExternalScheme);
+                b.AddAuthenticationSchemes(AufyIdentityConstants.ExternalSignUpScheme);
             });
     }
+    
+    private bool IsCookieAuth(string authMode)
+    {
+        var cookieAuth = authMode.Equals("cookie", StringComparison.InvariantCultureIgnoreCase);
+        if (cookieAuth)
+        {
+            return true;
+        }
+        
+        var bearerAuth = authMode.Equals("bearer", StringComparison.InvariantCultureIgnoreCase);
+        if (bearerAuth)
+        {
+            return false;
+        }
+        
+        throw new ArgumentException($"Invalid auth mode: {authMode}. Expected 'cookie' or 'bearer'.");
+    }
+}
+
+public class SignUpExternalTokenInfo
+{
+    public bool SetTokenCookie { get; set; } = true;
+    public bool SetRefreshTokenCookie { get; set; } = true;
 }

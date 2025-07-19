@@ -34,7 +34,7 @@ internal class SignInRefreshEndpointTests : TestBase
         newToken.Should().NotBeNull();
         
         res.Cookies.Should().NotBeEmpty();
-        var newRefreshToken = res.Cookies.FirstOrDefault(c => c.Name == AufyAuthSchemeDefaults.RefreshTokenCookieName)?.Value;
+        var newRefreshToken = res.Cookies.FirstOrDefault(c => c.Name == AufyIdentityConstants.RefreshTokenScheme)?.Value;
         
         newToken.AccessToken.Should().NotBeNullOrEmpty();
         newRefreshToken.Should().NotBeNullOrEmpty();
@@ -86,8 +86,8 @@ internal class SignInRefreshEndpointTests : TestBase
         await Then_status_code_is(res, HttpStatusCode.OK);
         
         res.Cookies.Should().NotBeEmpty();
-        var newRefreshToken = res.Cookies.FirstOrDefault(c => c.Name == AufyAuthSchemeDefaults.RefreshTokenCookieName)?.Value;
-        var newToken = res.Cookies.FirstOrDefault(c => c.Name == AufyAuthSchemeDefaults.AccessTokenCookieName)?.Value;
+        var newRefreshToken = res.Cookies.FirstOrDefault(c => c.Name == AufyIdentityConstants.RefreshTokenScheme)?.Value;
+        var newToken = res.Cookies.FirstOrDefault(c => c.Name == AufyIdentityConstants.BearerScheme)?.Value;
         
         newToken.Should().NotBeNullOrEmpty();
         newRefreshToken.Should().NotBeNullOrEmpty();

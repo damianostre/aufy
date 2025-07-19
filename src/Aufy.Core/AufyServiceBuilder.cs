@@ -42,7 +42,7 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
         {
             DefaultAuthScheme.JwtBearer => JwtBearerDefaults.AuthenticationScheme,
             DefaultAuthScheme.Cookie => CookieAuthenticationDefaults.AuthenticationScheme,
-            DefaultAuthScheme.JwtBearerOrCookie => AufyAuthSchemeDefaults.JwtBearerOrCookieScheme,
+            DefaultAuthScheme.JwtBearerOrCookie => AufyIdentityConstants.CookieAndBearerScheme,
             _ => throw new ArgumentOutOfRangeException(nameof(scheme), scheme, null)
         };
 
@@ -51,7 +51,7 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
         // Register policy scheme handler only if multi scheme auth is used
         if (scheme != DefaultAuthScheme.JwtBearerOrCookie)
         {
-            AuthenticationBuilder.AddScheme<PolicySchemeOptions, AufySignInExternalPolicyHandler>(schemeName, _ => { });
+            AuthenticationBuilder.AddScheme<PolicySchemeOptions, AufyExternalCallbackPolicyHandler>(schemeName, _ => { });
         }
 
         return this;
@@ -66,16 +66,15 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
         Services.AddScoped<IRefreshTokenManager, RefreshTokenManager>();
         Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
-        var schemeName = JwtBearerDefaults.AuthenticationScheme;
+        var schemeName = AufyIdentityConstants.BearerScheme;
 
         AuthenticationBuilder
             .AddJwtBearer(schemeName,
                 o =>
                 {
-                    o.Events ??= new JwtBearerEvents();
                     o.Events.OnMessageReceived = context =>
                     {
-                        if (context.Request.Cookies.TryGetValue(AufyAuthSchemeDefaults.AccessTokenCookieName,
+                        if (context.Request.Cookies.TryGetValue(schemeName,
                                 out var token))
                         {
                             context.Token = token;
@@ -87,13 +86,12 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
                     options?.Invoke(o);
                 })
             .AddScheme<AufyJwtBearerOptions, AufySignInJwtBearerHandler>(
-                AufyAuthSchemeDefaults.BearerSignInScheme, _ => { })
-            .AddJwtBearer(AufyAuthSchemeDefaults.RefreshTokenScheme, o =>
+                AufyIdentityConstants.BearerSignInScheme, _ => { })
+            .AddJwtBearer(AufyIdentityConstants.RefreshTokenScheme, o =>
             {
-                o.Events ??= new JwtBearerEvents();
                 o.Events.OnMessageReceived = context =>
                 {
-                    if (context.Request.Cookies.TryGetValue(AufyAuthSchemeDefaults.RefreshTokenCookieName,
+                    if (context.Request.Cookies.TryGetValue(AufyIdentityConstants.RefreshTokenScheme,
                             out var token))
                     {
                         context.Token = token;
@@ -121,7 +119,7 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
     /// <returns>The <see cref="AufyServiceBuilder{TUser}"/>.</returns>
     public AufyServiceBuilder<TUser> AddCookieAuth(Action<CookieAuthenticationOptions>? options = null)
     {
-        var schemeName = CookieAuthenticationDefaults.AuthenticationScheme;
+        var schemeName = AufyIdentityConstants.CookieScheme;
 
         AuthenticationBuilder
             .AddCookie(schemeName, o =>

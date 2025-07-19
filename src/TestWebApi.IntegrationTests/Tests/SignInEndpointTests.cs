@@ -32,7 +32,7 @@ internal class SignInEndpointTests : TestBase
         token.AccessToken.Should().NotBeNullOrEmpty();
         
         tokenRes.Cookies.Should().NotBeEmpty();
-        tokenRes.Cookies.Should().Contain(c => c.Name == AufyAuthSchemeDefaults.RefreshTokenCookieName);
+        tokenRes.Cookies.Should().Contain(c => c.Name == AufyIdentityConstants.RefreshTokenScheme);
         tokenRes.Cookies.Should().NotContain(c => c.Name == ".AspNetCore.Cookies");
         
         var response = await Cli
@@ -69,8 +69,8 @@ internal class SignInEndpointTests : TestBase
         token.RefreshToken.Should().BeNull();
         
         tokenRes.Cookies.Should().NotBeEmpty();
-        tokenRes.Cookies.Should().Contain(c => c.Name == AufyAuthSchemeDefaults.RefreshTokenCookieName);
-        tokenRes.Cookies.Should().Contain(c => c.Name == AufyAuthSchemeDefaults.AccessTokenCookieName);
+        tokenRes.Cookies.Should().Contain(c => c.Name == AufyIdentityConstants.RefreshTokenScheme);
+        tokenRes.Cookies.Should().Contain(c => c.Name == AufyIdentityConstants.BearerScheme);
         tokenRes.Cookies.Should().NotContain(c => c.Name == ".AspNetCore.Cookies");
         
         var response = await Cli

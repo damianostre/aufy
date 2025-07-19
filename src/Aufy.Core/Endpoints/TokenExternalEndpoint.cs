@@ -18,16 +18,13 @@ public class TokenExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identity
     {
         return builder.MapPost("/signin/external",
                 async Task<Results<EmptyHttpResult, UnauthorizedHttpResult, ProblemHttpResult>> (
-                    [FromQuery] bool? useCookie,
-                    [FromServices] AufyUserManager<TUser> userManager,
+                    [FromBody] TokenExternalRequest request,
                     [FromServices] AufySignInManager<TUser> signInManager,
                     [FromServices] ILogger<SignInExternalEndpoint<TUser>> logger,
-                    HttpContext context,
                     ClaimsPrincipal claimsPrincipal) =>
                 {                   
                     var (user, problem) = await signInManager.HandleExternalAuthAsync(
                         claimsPrincipal,
-                        context,
                         signUpModel: new DefaultSignupExternalRequest());
                     
                     if (problem is not null)
@@ -41,15 +38,27 @@ public class TokenExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identity
                         return TypedResults.Problem("Error occurred");
                     }
 
-                    await signInManager.SignInAsync(user, new AuthenticationProperties(),
-                        claimsPrincipal.Identity.AuthenticationType);
+                    var properties = new AuthenticationProperties(
+                        null, AufySignInJwtBearerHandler.BuildParameters(request.SetTokenCookie, request.SetRefreshTokenCookie));
+
+                    await signInManager.SignInWith(
+                        AufyIdentityConstants.BearerSignInScheme,
+                        user,
+                        properties,
+                        claimsPrincipal.Identity?.AuthenticationType ?? "External");
 
                     return TypedResults.Empty;
                 })
             .RequireAuthorization(b =>
             {
                 b.RequireAuthenticatedUser();
-                b.AddAuthenticationSchemes(AufyAuthSchemeDefaults.SignInExternalScheme);
+                b.AddAuthenticationSchemes(AufyIdentityConstants.ExternalScheme);
             });
     }
+}
+
+public class TokenExternalRequest
+{
+    public bool SetTokenCookie { get; set; } = true;
+    public bool SetRefreshTokenCookie { get; set; } = true;
 }

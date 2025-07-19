@@ -16,7 +16,7 @@ public class SignOutEndpoint<TUser> : IAuthEndpoint where TUser : IAufyUser
         return builder.MapPost("/signout", async Task<Ok>
             (HttpContext context) =>
             {
-                await context.SignOutAsync(AufyAuthSchemeDefaults.BearerSignInScheme);
+                await context.SignOutAsync(AufyIdentityConstants.BearerSignInScheme);
                 return TypedResults.Ok();
             })
             .RequireAuthorization();

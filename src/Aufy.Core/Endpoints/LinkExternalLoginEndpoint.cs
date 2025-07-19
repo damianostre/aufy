@@ -23,19 +23,19 @@ public class LinkExternalLoginEndpoint<TUser> : IAccountEndpoint where TUser : I
                     [FromServices] ILogger<LinkExternalLoginEndpoint<TUser>> logger,
                     HttpContext context) =>
                 {
-                    var singInExternalAuthenticateResult = await context.AuthenticateAsync(AufyAuthSchemeDefaults.SignInExternalScheme);
+                    var singInExternalAuthenticateResult = await context.AuthenticateAsync(AufyIdentityConstants.ExternalScheme);
                     if (!singInExternalAuthenticateResult.Succeeded
                         || singInExternalAuthenticateResult.Failure is not null
                         || singInExternalAuthenticateResult.Principal is not { Identity: ClaimsIdentity identity })
                     {
                         logger.LogInformation(
                             singInExternalAuthenticateResult.Failure,
-                            "Failed to authenticate with {Scheme}", AufyAuthSchemeDefaults.SignInExternalScheme);
+                            "Failed to authenticate with {Scheme}", AufyIdentityConstants.ExternalScheme);
                         return TypedResults.Problem("Error occurred");
                     }
 
-                    await context.SignOutAsync(AufyAuthSchemeDefaults.SignInExternalScheme);
-                    await context.SignOutAsync(AufyAuthSchemeDefaults.SignUpExternalScheme);
+                    await context.SignOutAsync(AufyIdentityConstants.ExternalScheme);
+                    await context.SignOutAsync(AufyIdentityConstants.ExternalSignUpScheme);
 
                     var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
                     if (userId is null)

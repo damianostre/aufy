@@ -1,12 +1,9 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Aufy.Core.AuthSchemes;
 
@@ -19,6 +16,9 @@ public class AufySignInJwtBearerHandler(
     IRefreshTokenManager refreshTokenManager)
     : SignInAuthenticationHandler<AufyJwtBearerOptions>(options, logger, encoder)
 {
+    public static readonly string SetTokenCookieParamKey = "SetTokenCookie";
+    public static readonly string SetRefreshTokenCookieParamKey = "SetRefreshTokenCookie";
+
     protected override async Task HandleSignInAsync(ClaimsPrincipal user, AuthenticationProperties? properties)
     {
         var (token, expiresAt) = tokenService.CreateAccessToken(user);
@@ -26,7 +26,7 @@ public class AufySignInJwtBearerHandler(
         var (refreshJwtToken, refreshExpiresAt) = tokenService.CreateBearerRefreshToken(refreshToken);
 
         Context.Response.Cookies.Append(
-            AufyAuthSchemeDefaults.RefreshTokenCookieName,
+            AufyIdentityConstants.RefreshTokenScheme,
             refreshJwtToken,
             new CookieOptions
             {
@@ -40,7 +40,7 @@ public class AufySignInJwtBearerHandler(
         if (useCookie)
         {
             Context.Response.Cookies.Append(
-                AufyAuthSchemeDefaults.AccessTokenCookieName,
+                AufyIdentityConstants.BearerScheme,
                 token,
                 new CookieOptions
                 {
@@ -65,12 +65,21 @@ public class AufySignInJwtBearerHandler(
     protected override Task HandleSignOutAsync(AuthenticationProperties? properties)
     {
         refreshTokenManager.ClearTokenAsync(Context.User.FindFirstValue(ClaimTypes.NameIdentifier));
-        Context.Response.Cookies.Delete(AufyAuthSchemeDefaults.RefreshTokenCookieName);
+        Context.Response.Cookies.Delete(AufyIdentityConstants.RefreshTokenScheme);
         return Task.CompletedTask;
     }
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         throw new NotSupportedException();
+    }
+
+    public static Dictionary<string, object?> BuildParameters(bool setTokenCookie, bool setRefreshTokenCookie)
+    {
+        return new Dictionary<string, object?>
+        {
+            { SetTokenCookieParamKey, setTokenCookie },
+            { SetRefreshTokenCookieParamKey, setRefreshTokenCookie },
+        };
     }
 }

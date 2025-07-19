@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Aufy.Core.AuthSchemes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -18,51 +19,19 @@ public class SignInEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, I
     {
         return builder.MapPost("/signin", async Task<Results<SignInHttpResult, ProblemHttpResult, EmptyHttpResult>>
             ([FromBody, Required] SignInRequest req,
-                [FromQuery] bool? useCookie,
-                HttpContext context,
                 [FromServices] IOptions<AufyOptions> options,
                 [FromServices] AufySignInManager<TUser> signInManager,
-                [FromServices] UserManager<TUser> userManager,
-                [FromServices] IServiceProvider serviceProvider,
                 [FromServices] ILogger<SignInEndpoint<TUser>> logger) =>
             {
-                ArgumentException.ThrowIfNullOrWhiteSpace(req.Email);
-                ArgumentException.ThrowIfNullOrWhiteSpace(req.Password);
-                
-                var events = serviceProvider.GetService<ISignInEndpointEvents<TUser>>();
-                
-                var user = await userManager.FindByEmailAsync(req.Email);
-                if (user == null)
-                {
-                    if (events is not null)
-                    {
-                        await events.UserNotFound(req, context);
-                    }
-                    
-                    logger.LogInformation("User {Email} failed to sign in. Reason: User not found", req.Email);
-                    return TypedResults.Problem(SignInResult.Failed.ToValidationProblem());
-                }
-
-                var result = await signInManager.PasswordSignInAsync(
-                    user, req.Password, isPersistent: false, lockoutOnFailure: true);
+                var result = await signInManager.SignInWithPasswordAsync(
+                    req.Email,
+                    req.Password,
+                    AufyIdentityConstants.CookieScheme);
                 
                 if (!result.Succeeded)
                 {
-                    if (events is not null)
-                    {
-                        await events.SignInFailedAsync(req, context, result);
-                    }
-                    
-                    logger.LogInformation("User {Email} failed to sign in. Result: {Result}", req.Email, result);
                     return TypedResults.Problem(result.ToValidationProblem());
                 }
-                
-                if (events is not null)
-                {
-                    await events.SignInSucceededAsync(user, context);
-                }
-                
-                logger.LogInformation("User {Email} signed in", req.Email);
 
                 return TypedResults.Empty;
             })
@@ -73,8 +42,8 @@ public class SignInEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, I
 
 public class SignInRequest
 {
-    [Required, EmailAddress] public string? Email { get; set; }
-    [Required] public string? Password { get; set; }
+    [Required, EmailAddress] public required string Email { get; set; }
+    [Required] public required string Password { get; set; }
 }
 
 /// <summary>

@@ -1,9 +1,11 @@
 ﻿using System.Security.Claims;
 using Aufy.Core.AuthSchemes;
+using Aufy.Core.Endpoints;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -17,29 +19,53 @@ public class AufySignInManager<TUser>(
     ILogger<SignInManager<TUser>> logger,
     IAuthenticationSchemeProvider schemes,
     IUserConfirmation<TUser> confirmation,
-    IOptions<AufyOptions> options)
+    IOptions<AufyOptions> options,
+    IServiceProvider serviceProvider)
     : SignInManager<TUser>(userManager, contextAccessor, claimsFactory, optionsAccessor, logger, schemes, confirmation)
     where TUser : IdentityUser, IAufyUser, new()
 {
+    // It's not possible to pass AuthenticationProperties directly to PasswordSignInAsync, so we store it here and use it later.
+    private Dictionary<string, object?>? _authenticationParameters = null;
+    
     public override Task SignInWithClaimsAsync(
-        TUser user, AuthenticationProperties? authenticationProperties, IEnumerable<Claim> additionalClaims)
+        TUser user, 
+        AuthenticationProperties? authenticationProperties,
+        IEnumerable<Claim> additionalClaims)
     {
-        var properties = authenticationProperties ?? new AuthenticationProperties();
-        if (UseCookie)
+        if (_authenticationParameters is not null)
         {
-            properties.SetParameter("useCookie", true);
+            authenticationProperties ??= new AuthenticationProperties();
+            foreach (var kvp in _authenticationParameters)
+            {
+                authenticationProperties.Parameters[kvp.Key] = kvp.Value;
+            }
         }
         
-        return base.SignInWithClaimsAsync(user, properties, additionalClaims);
+        return base.SignInWithClaimsAsync(user, authenticationProperties, additionalClaims);
     }
-    
+
+    public async Task SignInWith(
+        string signInScheme,
+        TUser user,
+        AuthenticationProperties properties,
+        string authenticationMethod)
+    {
+        AuthenticationScheme = signInScheme;
+        await SignInAsync(user, properties, authenticationMethod);
+    }
+
     public async Task<(TUser? user, ProblemHttpResult? problem)> HandleExternalAuthAsync<TModel>(
         ClaimsPrincipal claimsPrincipal,
-        HttpContext context,
         TModel signUpModel) where TModel : class
     {
-        await context.SignOutAsync(AufyAuthSchemeDefaults.SignInExternalScheme);
-        await context.SignOutAsync(AufyAuthSchemeDefaults.SignUpExternalScheme);
+        var context = contextAccessor.HttpContext;
+        if (context is null)
+        {
+            throw new InvalidOperationException("HttpContext is not available");
+        }
+        
+        await context.SignOutAsync(AufyIdentityConstants.ExternalScheme);
+        await context.SignOutAsync(AufyIdentityConstants.ExternalSignUpScheme);
 
         if (claimsPrincipal.Identity?.AuthenticationType is null)
         {
@@ -93,5 +119,62 @@ public class AufySignInManager<TUser>(
         }
 
         return (newUser, null);
+    }
+
+    public async Task<SignInResult> SignInWithPasswordAsync(
+        string email,
+        string password,
+        string authenticationScheme,
+        bool isPersistent = true,
+        Dictionary<string, object?>? authenticationParameters = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+        ArgumentException.ThrowIfNullOrWhiteSpace(authenticationScheme);
+
+        _authenticationParameters = authenticationParameters;
+        var context = contextAccessor.HttpContext;
+        if (context is null)
+        {
+            throw new InvalidOperationException("HttpContext is not available");
+        }
+
+        var events = serviceProvider.GetService<ISignInEndpointEvents<TUser>>();
+
+        var user = await UserManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            if (events is not null && context is not null)
+            {
+                var signInRequest = new SignInRequest { Email = email, Password = password };
+                await events.UserNotFound(signInRequest, context);
+            }
+            
+            Logger.LogInformation("User {Email} failed to sign in. Reason: User not found", email);
+            return SignInResult.Failed;
+        }
+
+        AuthenticationScheme = authenticationScheme;
+        var result = await PasswordSignInAsync(user, password, isPersistent, lockoutOnFailure: true);
+        
+        if (!result.Succeeded)
+        {
+            if (events is not null && context is not null)
+            {
+                var signInRequest = new SignInRequest { Email = email, Password = password };
+                await events.SignInFailedAsync(signInRequest, context, result);
+            }
+            
+            Logger.LogInformation("User {Email} failed to sign in. Result: {Result}", email, result);
+            return result;
+        }
+        
+        if (events is not null && context is not null)
+        {
+            await events.SignInSucceededAsync(user, context);
+        }
+        
+        Logger.LogInformation("User {Email} signed in", email);
+        return result;
     }
 }

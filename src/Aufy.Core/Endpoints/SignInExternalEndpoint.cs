@@ -21,12 +21,10 @@ public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identit
                     [FromServices] AufyUserManager<TUser> userManager,
                     [FromServices] AufySignInManager<TUser> signInManager,
                     [FromServices] ILogger<SignInExternalEndpoint<TUser>> logger,
-                    HttpContext context,
                     ClaimsPrincipal claimsPrincipal) =>
                 {                   
                     var (user, problem) = await signInManager.HandleExternalAuthAsync(
                         claimsPrincipal,
-                        context,
                         signUpModel: new DefaultSignupExternalRequest());
                     
                     if (problem is not null)
@@ -39,16 +37,22 @@ public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identit
                         logger.LogError("User is null after handling external auth");
                         return TypedResults.Problem("Error occurred");
                     }
-
-                    await signInManager.SignInAsync(user, new AuthenticationProperties(),
-                        claimsPrincipal.Identity.AuthenticationType);
+                    
+                    await signInManager.SignInWith(
+                        AufyIdentityConstants.CookieScheme,
+                        user, 
+                        new AuthenticationProperties
+                        {
+                            IsPersistent = true,
+                        },
+                        claimsPrincipal.Identity?.AuthenticationType ?? "External");
 
                     return TypedResults.Empty;
                 })
             .RequireAuthorization(b =>
             {
                 b.RequireAuthenticatedUser();
-                b.AddAuthenticationSchemes(AufyAuthSchemeDefaults.SignInExternalScheme);
+                b.AddAuthenticationSchemes(AufyIdentityConstants.ExternalScheme);
             });
     }
 }

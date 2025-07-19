@@ -44,12 +44,12 @@ public class TokenRefreshEndpoint<TUser> : IAuthEndpoint where TUser : IdentityU
                         context.User,
                         // TODO how to pass properties?
                         properties: new AuthenticationProperties { Parameters = { ["useCookie"] = true } },
-                        authenticationScheme: AufyAuthSchemeDefaults.BearerSignInScheme);
+                        authenticationScheme: AufyIdentityConstants.BearerSignInScheme);
                 })
             .RequireAuthorization(b =>
             {
                 b.RequireAuthenticatedUser();
-                b.AddAuthenticationSchemes(AufyAuthSchemeDefaults.RefreshTokenScheme);
+                b.AddAuthenticationSchemes(AufyIdentityConstants.RefreshTokenScheme);
             });
     }
 }

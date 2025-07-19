@@ -43,9 +43,9 @@ public static class TestHelper
         token.Should().NotBeNull();
         token.AccessToken.Should().NotBeNullOrEmpty();
         res.Cookies.Should().NotBeEmpty();
-        res.Cookies.Should().Contain(c => c.Name == AufyAuthSchemeDefaults.RefreshTokenCookieName);
+        res.Cookies.Should().Contain(c => c.Name == AufyIdentityConstants.RefreshTokenScheme);
         
-        var refreshToken = res.Cookies.FirstOrDefault(c => c.Name == AufyAuthSchemeDefaults.RefreshTokenCookieName);
+        var refreshToken = res.Cookies.FirstOrDefault(c => c.Name == AufyIdentityConstants.RefreshTokenScheme);
         
         return (token.AccessToken, refreshToken!);
     }

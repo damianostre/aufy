@@ -91,24 +91,24 @@ public static class ServicesExtensions
         var authenticationBuilder = services
             .AddAuthorization()
             .AddAuthentication()
-            .AddScheme<PolicySchemeOptions, AufySignInExternalPolicyHandler>(
-                AufyAuthSchemeDefaults.SignInExternalPolicyScheme, _ => { })
-            .AddCookie(AufyAuthSchemeDefaults.SignInExternalScheme, o =>
+            .AddScheme<PolicySchemeOptions, AufyExternalCallbackPolicyHandler>(
+                AufyIdentityConstants.ExternalCallbackPolicyScheme, _ => { })
+            .AddCookie(AufyIdentityConstants.ExternalScheme, o =>
             {
                 o.Cookie.SameSite = SameSiteMode.None;
                 o.Cookie.HttpOnly = true;
                 o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                 o.ExpireTimeSpan = TimeSpan.FromSeconds(60);
-                o.Cookie.Name = AufyAuthSchemeDefaults.SignInExternalScheme;
+                o.Cookie.Name = AufyIdentityConstants.ExternalScheme;
             })
-            .AddCookie(AufyAuthSchemeDefaults.SignUpExternalScheme, o =>
+            .AddCookie(AufyIdentityConstants.ExternalSignUpScheme, o =>
             {
                 o.Cookie.SameSite = SameSiteMode.None;
                 o.Cookie.HttpOnly = true;
                 o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                 o.ExpireTimeSpan = TimeSpan.FromSeconds(360);
                 o.Cookie.Path = opts.AuthApiBasePath + "/signup/external";
-                o.Cookie.Name = AufyAuthSchemeDefaults.SignUpExternalScheme;
+                o.Cookie.Name = AufyIdentityConstants.ExternalSignUpScheme;
             });
 
         var builder = new AufyServiceBuilder<TUser>(services, opts, identityBuilder, authenticationBuilder, configuration);
