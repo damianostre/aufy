@@ -15,7 +15,7 @@ sealed class AufyBearerOrCookieSchemeHandler(
 {
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        var bearerResult = await Context.AuthenticateAsync(JwtBearerDefaults.AuthenticationScheme);
+        var bearerResult = await Context.AuthenticateAsync(AufyIdentityConstants.BearerScheme);
 
         // Only try to authenticate with the application cookie if there is no bearer token.
         if (!bearerResult.None)

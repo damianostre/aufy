@@ -49,9 +49,9 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
         Services.AddAuthentication(schemeName);
 
         // Register policy scheme handler only if multi scheme auth is used
-        if (scheme != DefaultAuthScheme.JwtBearerOrCookie)
+        if (scheme == DefaultAuthScheme.JwtBearerOrCookie)
         {
-            AuthenticationBuilder.AddScheme<PolicySchemeOptions, AufyExternalCallbackPolicyHandler>(schemeName, _ => { });
+            AuthenticationBuilder.AddScheme<PolicySchemeOptions, AufyBearerOrCookieSchemeHandler>(schemeName, _ => { });
         }
 
         return this;
@@ -61,7 +61,7 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
     /// Registers JWT Bearer authentication schemes
     /// </summary>
     /// <returns>The <see cref="AufyServiceBuilder{TUser}"/>.</returns>
-    public AufyServiceBuilder<TUser> AddJwtAuth(Action<JwtBearerOptions>? options = null)
+    public AufyServiceBuilder<TUser> AddJwtBearerAuth(Action<JwtBearerOptions>? options = null)
     {
         Services.AddScoped<IRefreshTokenManager, RefreshTokenManager>();
         Services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -72,6 +72,7 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
             .AddJwtBearer(schemeName,
                 o =>
                 {
+                    o.Events ??= new JwtBearerEvents();
                     o.Events.OnMessageReceived = context =>
                     {
                         if (context.Request.Cookies.TryGetValue(schemeName,
@@ -89,6 +90,7 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
                 AufyIdentityConstants.BearerSignInScheme, _ => { })
             .AddJwtBearer(AufyIdentityConstants.RefreshTokenScheme, o =>
             {
+                o.Events ??= new JwtBearerEvents();
                 o.Events.OnMessageReceived = context =>
                 {
                     if (context.Request.Cookies.TryGetValue(AufyIdentityConstants.RefreshTokenScheme,

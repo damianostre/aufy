@@ -6,7 +6,7 @@ using Flurl.Http;
 
 namespace TestWebApi.IntegrationTests.Tests;
 
-internal class SignInEndpointTests : TestBase
+internal class TokenEndpointTests : TestBase
 {
     [Test]
     public async Task ValidRequest_ShouldReturnAccessToken()
@@ -18,8 +18,8 @@ internal class SignInEndpointTests : TestBase
         
         // Act
         var tokenRes = await Cli
-            .Request("auth", "signin")
-            .PostJsonAsync(new SignInRequest
+            .Request("auth", "token")
+            .PostJsonAsync(new TokenRequest
             {
                 Email = email,
                 Password = password
@@ -53,20 +53,17 @@ internal class SignInEndpointTests : TestBase
         
         // Act
         var tokenRes = await Cli
-            .Request("auth", "signin")
-            .SetQueryParam("usecookie", true)
-            .PostJsonAsync(new SignInRequest
+            .Request("auth", "token")
+            .PostJsonAsync(new TokenRequest
             {
                 Email = email,
-                Password = password
+                Password = password,
             });
 
         await Then_status_code_is(tokenRes, HttpStatusCode.OK);
 
         var token = await tokenRes.GetJsonAsync<AccessTokenResponse>();
         token.Should().NotBeNull();
-        token.AccessToken.Should().BeNull();
-        token.RefreshToken.Should().BeNull();
         
         tokenRes.Cookies.Should().NotBeEmpty();
         tokenRes.Cookies.Should().Contain(c => c.Name == AufyIdentityConstants.RefreshTokenScheme);

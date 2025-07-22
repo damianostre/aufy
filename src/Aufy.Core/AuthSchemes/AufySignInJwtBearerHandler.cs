@@ -16,28 +16,31 @@ public class AufySignInJwtBearerHandler(
     IRefreshTokenManager refreshTokenManager)
     : SignInAuthenticationHandler<AufyJwtBearerOptions>(options, logger, encoder)
 {
-    public static readonly string SetTokenCookieParamKey = "SetTokenCookie";
-    public static readonly string SetRefreshTokenCookieParamKey = "SetRefreshTokenCookie";
+    private const string SetTokenCookieParamKey = "SetTokenCookie";
+    private const string SetRefreshTokenCookieParamKey = "SetRefreshTokenCookie";
 
     protected override async Task HandleSignInAsync(ClaimsPrincipal user, AuthenticationProperties? properties)
     {
         var (token, expiresAt) = tokenService.CreateAccessToken(user);
         var refreshToken = await refreshTokenManager.CreateTokenAsync(user);
         var (refreshJwtToken, refreshExpiresAt) = tokenService.CreateBearerRefreshToken(refreshToken);
+        var (setTokenCookie, setRefreshTokenCookie) = GetParameters(properties);
 
-        Context.Response.Cookies.Append(
-            AufyIdentityConstants.RefreshTokenScheme,
-            refreshJwtToken,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = refreshExpiresAt,
-            });
-        
-        var useCookie = properties?.GetParameter<bool?>("useCookie") ?? false;
-        if (useCookie)
+        if (setRefreshTokenCookie)
+        {
+            Context.Response.Cookies.Append(
+                AufyIdentityConstants.RefreshTokenScheme,
+                refreshJwtToken,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = refreshExpiresAt,
+                });
+        }
+
+        if (setTokenCookie)
         {
             Context.Response.Cookies.Append(
                 AufyIdentityConstants.BearerScheme,
@@ -50,11 +53,11 @@ public class AufySignInJwtBearerHandler(
                     Expires = expiresAt,
                 });
         }
-        
+
         var accessTokenResponse = new AccessTokenResponse
         {
-            AccessToken = useCookie ? null : token,
-            ExpiresIn = (long)(expiresAt - DateTime.UtcNow).TotalSeconds,
+            AccessToken = setTokenCookie ? null : token,
+            ExpiresIn = (long) (expiresAt - DateTime.UtcNow).TotalSeconds,
             RefreshToken = refreshJwtToken
         };
 
@@ -78,8 +81,20 @@ public class AufySignInJwtBearerHandler(
     {
         return new Dictionary<string, object?>
         {
-            { SetTokenCookieParamKey, setTokenCookie },
-            { SetRefreshTokenCookieParamKey, setRefreshTokenCookie },
+            {SetTokenCookieParamKey, setTokenCookie},
+            {SetRefreshTokenCookieParamKey, setRefreshTokenCookie},
         };
+    }
+
+    private (bool setTokenCookie, bool setRefreshTokenCookie) GetParameters(AuthenticationProperties? properties)
+    {
+        if (properties is null)
+        {
+            return (false, false);
+        }
+
+        var setTokenCookie = properties.GetParameter<bool?>(SetTokenCookieParamKey) ?? false;
+        var setRefreshTokenCookie = properties.GetParameter<bool?>(SetRefreshTokenCookieParamKey) ?? false;
+        return (setTokenCookie, setRefreshTokenCookie);
     }
 }
