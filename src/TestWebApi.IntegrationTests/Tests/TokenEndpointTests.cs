@@ -30,9 +30,9 @@ internal class TokenEndpointTests : TestBase
         var token = await tokenRes.GetJsonAsync<AccessTokenResponse>();
         token.Should().NotBeNull();
         token.AccessToken.Should().NotBeNullOrEmpty();
+        token.ExpiresIn.Should().BeGreaterThan(0);
+        token.RefreshToken.Should().NotBeNullOrEmpty();
         
-        tokenRes.Cookies.Should().NotBeEmpty();
-        tokenRes.Cookies.Should().Contain(c => c.Name == AufyIdentityConstants.RefreshTokenScheme);
         tokenRes.Cookies.Should().NotContain(c => c.Name == ".AspNetCore.Cookies");
         
         var response = await Cli
@@ -64,6 +64,9 @@ internal class TokenEndpointTests : TestBase
 
         var token = await tokenRes.GetJsonAsync<AccessTokenResponse>();
         token.Should().NotBeNull();
+        token.AccessToken.Should().NotBeNullOrEmpty();
+        token.ExpiresIn.Should().BeGreaterThan(0);
+        token.RefreshToken.Should().NotBeNullOrEmpty();
         
         tokenRes.Cookies.Should().NotBeEmpty();
         tokenRes.Cookies.Should().Contain(c => c.Name == AufyIdentityConstants.RefreshTokenScheme);
@@ -76,7 +79,5 @@ internal class TokenEndpointTests : TestBase
             .GetAsync();
         
         await Then_status_code_is(response, HttpStatusCode.OK);
-        
-
     }
 }
