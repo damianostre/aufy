@@ -21,7 +21,7 @@ public class TokenExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identity
                     [FromBody] TokenExternalRequest request,
                     [FromServices] AufySignInManager<TUser> signInManager,
                     [FromServices] ILogger<SignInExternalEndpoint<TUser>> logger,
-                    ClaimsPrincipal claimsPrincipal) =>
+                    [FromServices] ClaimsPrincipal claimsPrincipal) =>
                 {                   
                     var (user, problem) = await signInManager.HandleExternalAuthAsync(
                         claimsPrincipal,

@@ -21,7 +21,7 @@ public class SignInExternalEndpoint<TUser> : IAuthEndpoint where TUser : Identit
                     [FromServices] AufyUserManager<TUser> userManager,
                     [FromServices] AufySignInManager<TUser> signInManager,
                     [FromServices] ILogger<SignInExternalEndpoint<TUser>> logger,
-                    ClaimsPrincipal claimsPrincipal) =>
+                    [FromServices] ClaimsPrincipal claimsPrincipal) =>
                 {                   
                     var (user, problem) = await signInManager.HandleExternalAuthAsync(
                         claimsPrincipal,

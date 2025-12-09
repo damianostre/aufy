@@ -91,7 +91,7 @@ internal class EmailConfirmEndpointTests : TestBase
     }
     
     [Test]
-    public async Task MissingCode_ShouldReturnBadRequest()
+    public async Task MissingCode_ShouldReturnNotFound()
     {
         // Arrange
         var email = TestId.Format("test@test.test");
@@ -112,17 +112,17 @@ internal class EmailConfirmEndpointTests : TestBase
             .GetAsync();
         
         // Assert
-        await Then_status_code_is(confirmEmailRes, HttpStatusCode.BadRequest);
+        await Then_status_code_is(confirmEmailRes, HttpStatusCode.NotFound);
     }
     
     [Test]
-    public async Task MissingUserId_ShouldReturnBadRequest()
+    public async Task MissingUserId_ShouldReturnNotFound()
     {
         // Arrange
         var email = TestId.Format("test@test.test");
         var password = "SuperSecret(%2";
         await Cli.Given_user_signedUp_correctly(email, password);
-        
+
         var confirmLink = TestAufyEmailSenderManager.GetEmailConfirmationLink(email);
         confirmLink.Should().NotBeNullOrWhiteSpace();
         
@@ -137,7 +137,7 @@ internal class EmailConfirmEndpointTests : TestBase
             .GetAsync();
         
         // Assert
-        await Then_status_code_is(confirmEmailRes, HttpStatusCode.BadRequest);
+        await Then_status_code_is(confirmEmailRes, HttpStatusCode.NotFound);
     }
     
     [Test]

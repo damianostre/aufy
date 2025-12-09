@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 
@@ -14,8 +15,8 @@ public class AccountInfoEndpoint<TUser> : IAccountEndpoint where TUser : Identit
     {
         return builder.MapGet("/info", async Task<Results<Ok<AccountInfoResponse>, NotFound>> (
             HttpContext context,
-            ILogger<AccountInfoEndpoint<TUser>> logger,
-            UserManager<TUser> userManager) =>
+            [FromServices] ILogger<AccountInfoEndpoint<TUser>> logger,
+            [FromServices] UserManager<TUser> userManager) =>
         {
             var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var user = userId is not null ? await userManager.FindByIdAsync(userId) : null;

@@ -41,12 +41,11 @@ public class PasswordChangeEndpoint<TUser> : IAccountEndpoint where TUser : Iden
                     logger.LogInformation("User {UserId} changed password successfully", user.Id);
                     return TypedResults.Empty;
                 })
-            .AddEndpointFilter<ValidationEndpointFilter<ChangePasswordRequest>>()
             .RequireAuthorization();
     }
 }
 
-public class ChangePasswordRequest
+public record ChangePasswordRequest
 {
     [Required] public string? Password { get; set; }
     [Required] public string? NewPassword { get; set; }

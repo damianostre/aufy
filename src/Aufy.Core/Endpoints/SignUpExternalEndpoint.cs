@@ -26,8 +26,8 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
                     [FromRoute] string authMode,
                     [FromServices] AufySignInManager<TUser> signInManager,
                     [FromServices] ILogger<SignUpExternalEndpoint<TUser, TModel>> logger,
-                    ClaimsPrincipal claimsPrincipal,
-                    IOptions<AufyOptions> options) =>
+                    [FromServices] ClaimsPrincipal claimsPrincipal,
+                    [FromServices] IOptions<AufyOptions> options) =>
                 {
                     if (options.Value.EnableSignUp is false)
                     {
@@ -76,7 +76,6 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
 
                     return TypedResults.Empty;
                 })
-            .AddEndpointFilter<ValidationEndpointFilter<TModel>>()
             .RequireAuthorization(b =>
             {
                 b.RequireAuthenticatedUser();
@@ -102,7 +101,7 @@ public class SignUpExternalEndpoint<TUser, TModel> : IAuthEndpoint
     }
 }
 
-public class SignUpExternalTokenInfo
+public record SignUpExternalTokenInfo
 {
     public bool SetTokenCookie { get; set; } = true;
     public bool SetRefreshTokenCookie { get; set; } = true;

@@ -8,13 +8,13 @@ public interface IMySignUpRequest
     string? MySiteUrl { get; set; }
 }
 
-public class MySignUpRequest : SignUpRequest, IMySignUpRequest
+public record MySignUpRequest : SignUpRequest, IMySignUpRequest
 {
     public string? AboutMe { get; set; }
     public string? MySiteUrl { get; set; }
 }
 
-public class MySignUpExternalRequest : IMySignUpRequest
+public record MySignUpExternalRequest : IMySignUpRequest
 {
     public string? AboutMe { get; set; }
     public string? MySiteUrl { get; set; }

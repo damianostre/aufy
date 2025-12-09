@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Validation;
 
 namespace Aufy.Core.Endpoints;
 
@@ -52,12 +53,11 @@ public class PasswordResetEndpoint<TUser> : IAccountEndpoint where TUser : Ident
 
                     return TypedResults.Problem(result.ToValidationProblem());
                 })
-            .AddEndpointFilter<ValidationEndpointFilter<PasswordResetRequest>>()
             .AllowAnonymous();
     }
 }
 
-public class PasswordResetRequest
+public record PasswordResetRequest
 {
     [Required] public string? Code { get; set; }
     [Required, EmailAddress] public string? Email { get; set; }

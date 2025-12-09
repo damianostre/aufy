@@ -52,12 +52,11 @@ public class PasswordForgotEndpoint<TUser> : IAccountEndpoint where TUser : Iden
 
                 return TypedResults.Ok();
             })
-            .AddEndpointFilter<ValidationEndpointFilter<PasswordForgotRequest>>()
             .AllowAnonymous();
     }
 }
 
-public class PasswordForgotRequest
+public record PasswordForgotRequest
 {
     [Required, EmailAddress] public string? Email { get; set; }
 }

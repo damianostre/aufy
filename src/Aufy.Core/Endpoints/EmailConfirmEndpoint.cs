@@ -18,12 +18,15 @@ public class EmailConfirmEndpoint<TUser> : IAccountEndpoint where TUser : Identi
     public RouteHandlerBuilder Map(IEndpointRouteBuilder builder)
     {
         return builder.MapGet("/email/confirm", async Task<Results<Ok, NotFound>> (
-                [FromQuery, Required] string code,
-                [FromQuery, Required] string userId,
-                HttpContext ctx) =>
+                [FromQuery] string? code,
+                [FromQuery] string? userId,
+                [FromServices] ILogger<EmailConfirmEndpoint<TUser>> logger,
+                [FromServices] UserManager<TUser> manager) =>
             {
-                var manager = ctx.RequestServices.GetRequiredService<UserManager<TUser>>();
-                var logger = ctx.RequestServices.GetRequiredService<ILogger<EmailConfirmEndpoint<TUser>>>();
+                if (userId is null || code is null)
+                {
+                    return TypedResults.NotFound();
+                }
 
                 var user = await manager.FindByIdAsync(userId);
                 if (user == null)

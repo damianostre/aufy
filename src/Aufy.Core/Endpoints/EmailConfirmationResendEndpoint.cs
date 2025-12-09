@@ -47,12 +47,11 @@ public class EmailConfirmationResendEndpoint<TUser> : IAccountEndpoint where TUs
 
                 return TypedResults.Ok();
             })
-            .AddEndpointFilter<ValidationEndpointFilter<EmailConfirmationResendRequest>>()
             .AllowAnonymous();
     }
 }
 
-public class EmailConfirmationResendRequest 
+public record EmailConfirmationResendRequest
 {
     [Required, EmailAddress]
     public string? Email { get; set; }

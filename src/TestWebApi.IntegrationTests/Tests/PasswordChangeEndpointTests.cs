@@ -150,26 +150,6 @@ internal class PasswordChangeEndpointTests : TestBase
     }
     
     [Test]
-    public async Task Unauthorized_ShouldReturn500_DueToAuthSchemeIssue()
-    {
-        // NOTE: This test expects 500 instead of 401 due to a NotImplementedException 
-        // in PolicySchemeHandler.HandleChallengeAsync in the test environment.
-        // In a real application, this would likely return 401.
-        
-        // Act
-        var changePasswordRes = await Cli
-            .Request("account", "password", "change")
-            .PostJsonAsync(new ChangePasswordRequest
-            {
-                Password = "SomePassword123!",
-                NewPassword = "NewPassword123!"
-            });
-
-        // Assert
-        await Then_status_code_is(changePasswordRes, HttpStatusCode.InternalServerError);
-    }
-    
-    [Test]
     public async Task MissingPassword_ShouldReturnValidationProblem()
     {
         // Arrange

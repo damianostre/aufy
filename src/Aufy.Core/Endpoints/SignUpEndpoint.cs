@@ -89,12 +89,11 @@ public class SignUpEndpoint<TUser, TModel> : IAuthEndpoint where TModel : SignUp
                         RequiresEmailConfirmation = identityOptions.Value.SignIn.RequireConfirmedEmail
                     });
                 })
-            .AddEndpointFilter<ValidationEndpointFilter<TModel>>()
             .AllowAnonymous();
     }
 }
 
-public class SignUpRequest
+public record SignUpRequest
 {
     [Required, EmailAddress] public string? Email { get; set; }
     [Required] public string? Password { get; set; }
@@ -102,5 +101,6 @@ public class SignUpRequest
 
 public class SignUpResponse
 {
+
     public bool RequiresEmailConfirmation { get; set; }
 }

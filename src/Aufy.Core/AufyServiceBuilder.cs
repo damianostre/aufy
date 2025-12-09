@@ -36,23 +36,30 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
         AuthenticationBuilder = authenticationBuilder;
     }
 
-    public AufyServiceBuilder<TUser> UseDefaultAuthScheme(DefaultAuthScheme scheme)
+    public AufyServiceBuilder<TUser> UseCookieOrBearerAsDefaultScheme()
     {
-        var schemeName = scheme switch
-        {
-            DefaultAuthScheme.JwtBearer => JwtBearerDefaults.AuthenticationScheme,
-            DefaultAuthScheme.Cookie => CookieAuthenticationDefaults.AuthenticationScheme,
-            DefaultAuthScheme.JwtBearerOrCookie => AufyIdentityConstants.CookieAndBearerScheme,
-            _ => throw new ArgumentOutOfRangeException(nameof(scheme), scheme, null)
-        };
+        Services.AddAuthentication(AufyIdentityConstants.CookieOrBearerScheme);
 
-        Services.AddAuthentication(schemeName);
+        AuthenticationBuilder.AddScheme<PolicySchemeOptions, AufyBearerOrCookieSchemeHandler>(
+            AufyIdentityConstants.CookieOrBearerScheme, b =>
+            {
+                b.ForwardDefault = AufyIdentityConstants.BearerScheme;
+                b.ForwardAuthenticate = AufyIdentityConstants.CookieOrBearerScheme;
+            });
 
-        // Register policy scheme handler only if multi scheme auth is used
-        if (scheme == DefaultAuthScheme.JwtBearerOrCookie)
-        {
-            AuthenticationBuilder.AddScheme<PolicySchemeOptions, AufyBearerOrCookieSchemeHandler>(schemeName, _ => { });
-        }
+        return this;
+    }
+
+    public AufyServiceBuilder<TUser> UseJwtBearerAsDefaultScheme()
+    {
+        Services.AddAuthentication(AufyIdentityConstants.BearerScheme);
+
+        return this;
+    }
+
+    public AufyServiceBuilder<TUser> UseCookieAsDefaultScheme()
+    {
+        Services.AddAuthentication(AufyIdentityConstants.CookieScheme);
 
         return this;
     }
@@ -111,7 +118,7 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
         }
 
         Services.AddSingleton<IAuthEndpoint, TokenRefreshEndpoint<TUser>>();
-        
+
         return this;
     }
 
@@ -223,11 +230,4 @@ public class AufyServiceBuilder<TUser> where TUser : IdentityUser, IAufyUser, ne
 
         return this;
     }
-}
-
-public enum DefaultAuthScheme
-{
-    JwtBearer,
-    Cookie,
-    JwtBearerOrCookie
 }

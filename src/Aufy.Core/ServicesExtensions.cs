@@ -44,6 +44,7 @@ public static class ServicesExtensions
             o.SigningKey = opts.JwtBearer.SigningKey;
         });
 
+        services.AddValidation();
         services.AddScoped<IAufyEmailSenderManager<TUser>, AufyEmailSenderManager<TUser>>();
 
         if (opts.EnableEmailPasswordFlow)

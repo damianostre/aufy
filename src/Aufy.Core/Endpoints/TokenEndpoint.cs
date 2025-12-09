@@ -34,12 +34,11 @@ public class TokenEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, IA
 
                 return TypedResults.Empty;
             })
-            .AddEndpointFilter<ValidationEndpointFilter<TokenRequest>>()
             .AllowAnonymous();
     }
 }
 
-public class TokenRequest
+public record TokenRequest
 {
     [Required, EmailAddress] public required string Email { get; set; }
     [Required] public required string Password { get; set; }

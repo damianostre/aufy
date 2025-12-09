@@ -6,7 +6,7 @@ public static class AufyIdentityConstants
 {
     public static readonly string CookieScheme = IdentityConstants.ApplicationScheme;
     public static readonly string BearerScheme = IdentityConstants.BearerScheme;
-    public static readonly string CookieAndBearerScheme = "Aufy.CookieAndBearerScheme";
+    public static readonly string CookieOrBearerScheme = "Aufy.CookieOrBearerScheme";
     public static readonly string BearerSignInScheme = "Aufy.BearerSignInScheme";
     public static readonly string RefreshTokenScheme = "Aufy.RefreshToken";
     public static readonly string ExternalCallbackPolicyScheme = "Aufy.ExternalCallbackScheme";

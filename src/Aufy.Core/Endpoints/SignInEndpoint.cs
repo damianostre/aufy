@@ -35,12 +35,11 @@ public class SignInEndpoint<TUser> : IAuthEndpoint where TUser : IdentityUser, I
 
                 return TypedResults.Empty;
             })
-            .AddEndpointFilter<ValidationEndpointFilter<SignInRequest>>()
             .AllowAnonymous();
     }
 }
 
-public class SignInRequest
+public record SignInRequest
 {
     [Required, EmailAddress] public required string Email { get; set; }
     [Required] public required string Password { get; set; }
