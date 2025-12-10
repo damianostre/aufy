@@ -101,6 +101,5 @@ public record SignUpRequest
 
 public class SignUpResponse
 {
-
     public bool RequiresEmailConfirmation { get; set; }
 }
