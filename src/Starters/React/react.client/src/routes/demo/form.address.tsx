@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { Container, Paper, Stack, Group, Grid } from '@mantine/core'
 
 import { useAppForm } from '@/hooks/demo.form'
 
@@ -41,22 +42,37 @@ function AddressForm() {
   })
 
   return (
-    <div
-      className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 p-4 text-white"
+    <Container
+      fluid
       style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem',
         backgroundImage:
           'radial-gradient(50% 50% at 5% 40%, #f4a460 0%, #8b4513 70%, #1a0f0a 100%)',
       }}
     >
-      <div className="w-full max-w-2xl p-8 rounded-xl backdrop-blur-md bg-black/50 shadow-xl border-8 border-black/10">
+      <Paper
+        p="xl"
+        radius="md"
+        style={{
+          width: '100%',
+          maxWidth: '42rem',
+          backdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          border: '8px solid rgba(0, 0, 0, 0.1)',
+        }}
+      >
         <form
           onSubmit={(e) => {
             e.preventDefault()
             e.stopPropagation()
             form.handleSubmit()
           }}
-          className="space-y-6"
         >
+          <Stack gap="lg">
           <form.AppField name="fullName">
             {(field) => <field.TextField label="Full Name" />}
           </form.AppField>
@@ -92,50 +108,56 @@ function AddressForm() {
             {(field) => <field.TextField label="Street Address" />}
           </form.AppField>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <form.AppField
-              name="address.city"
-              validators={{
-                onBlur: ({ value }) => {
-                  if (!value || value.trim().length === 0) {
-                    return 'City is required'
-                  }
-                  return undefined
-                },
-              }}
-            >
-              {(field) => <field.TextField label="City" />}
-            </form.AppField>
-            <form.AppField
-              name="address.state"
-              validators={{
-                onBlur: ({ value }) => {
-                  if (!value || value.trim().length === 0) {
-                    return 'State is required'
-                  }
-                  return undefined
-                },
-              }}
-            >
-              {(field) => <field.TextField label="State" />}
-            </form.AppField>
-            <form.AppField
-              name="address.zipCode"
-              validators={{
-                onBlur: ({ value }) => {
-                  if (!value || value.trim().length === 0) {
-                    return 'Zip code is required'
-                  }
-                  if (!/^\d{5}(-\d{4})?$/.test(value)) {
-                    return 'Invalid zip code format'
-                  }
-                  return undefined
-                },
-              }}
-            >
-              {(field) => <field.TextField label="Zip Code" />}
-            </form.AppField>
-          </div>
+            <Grid>
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <form.AppField
+                  name="address.city"
+                  validators={{
+                    onBlur: ({ value }) => {
+                      if (!value || value.trim().length === 0) {
+                        return 'City is required'
+                      }
+                      return undefined
+                    },
+                  }}
+                >
+                  {(field) => <field.TextField label="City" />}
+                </form.AppField>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <form.AppField
+                  name="address.state"
+                  validators={{
+                    onBlur: ({ value }) => {
+                      if (!value || value.trim().length === 0) {
+                        return 'State is required'
+                      }
+                      return undefined
+                    },
+                  }}
+                >
+                  {(field) => <field.TextField label="State" />}
+                </form.AppField>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <form.AppField
+                  name="address.zipCode"
+                  validators={{
+                    onBlur: ({ value }) => {
+                      if (!value || value.trim().length === 0) {
+                        return 'Zip code is required'
+                      }
+                      if (!/^\d{5}(-\d{4})?$/.test(value)) {
+                        return 'Invalid zip code format'
+                      }
+                      return undefined
+                    },
+                  }}
+                >
+                  {(field) => <field.TextField label="Zip Code" />}
+                </form.AppField>
+              </Grid.Col>
+            </Grid>
 
           <form.AppField
             name="address.country"
@@ -188,13 +210,14 @@ function AddressForm() {
             )}
           </form.AppField>
 
-          <div className="flex justify-end">
-            <form.AppForm>
-              <form.SubscribeButton label="Submit" />
-            </form.AppForm>
-          </div>
+            <Group justify="flex-end">
+              <form.AppForm>
+                <form.SubscribeButton label="Submit" />
+              </form.AppForm>
+            </Group>
+          </Stack>
         </form>
-      </div>
-    </div>
+      </Paper>
+    </Container>
   )
 }

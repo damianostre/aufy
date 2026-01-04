@@ -1,4 +1,5 @@
 import { useStore } from '@tanstack/react-form'
+import { Button, Text, TextInput, Textarea, Select as MantineSelect } from '@mantine/core'
 
 import { useFieldContext, useFormContext } from '@/hooks/demo.form-context'
 
@@ -7,13 +8,9 @@ export function SubscribeButton({ label }: { label: string }) {
   return (
     <form.Subscribe selector={(state) => state.isSubmitting}>
       {(isSubmitting) => (
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
-        >
+        <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
           {label}
-        </button>
+        </Button>
       )}
     </form.Subscribe>
   )
@@ -27,12 +24,15 @@ function ErrorMessages({
   return (
     <>
       {errors.map((error) => (
-        <div
+        <Text
           key={typeof error === 'string' ? error : error.message}
-          className="text-red-500 mt-1 font-bold"
+          c="red"
+          size="sm"
+          fw={700}
+          mt="xs"
         >
           {typeof error === 'string' ? error : error.message}
-        </div>
+        </Text>
       ))}
     </>
   )
@@ -49,19 +49,21 @@ export function TextField({
   const errors = useStore(field.store, (state) => state.meta.errors)
 
   return (
-    <div>
-      <label htmlFor={label} className="block font-bold mb-1 text-xl">
-        {label}
-        <input
-          value={field.state.value}
-          placeholder={placeholder}
-          onBlur={field.handleBlur}
-          onChange={(e) => field.handleChange(e.target.value)}
-          className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </label>
-      {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
-    </div>
+    <TextInput
+      label={label}
+      placeholder={placeholder}
+      value={field.state.value}
+      onBlur={field.handleBlur}
+      onChange={(e) => field.handleChange(e.target.value)}
+      error={field.state.meta.isTouched && errors.length > 0 ? errors[0] : undefined}
+      size="md"
+      styles={{
+        label: {
+          fontSize: '1.25rem',
+          fontWeight: 700,
+        },
+      }}
+    />
   )
 }
 
@@ -76,25 +78,28 @@ export function TextArea({
   const errors = useStore(field.store, (state) => state.meta.errors)
 
   return (
-    <div>
-      <label htmlFor={label} className="block font-bold mb-1 text-xl">
-        {label}
-        <textarea
-          value={field.state.value}
-          onBlur={field.handleBlur}
-          rows={rows}
-          onChange={(e) => field.handleChange(e.target.value)}
-          className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </label>
-      {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
-    </div>
+    <Textarea
+      label={label}
+      value={field.state.value}
+      onBlur={field.handleBlur}
+      rows={rows}
+      onChange={(e) => field.handleChange(e.target.value)}
+      error={field.state.meta.isTouched && errors.length > 0 ? errors[0] : undefined}
+      size="md"
+      styles={{
+        label: {
+          fontSize: '1.25rem',
+          fontWeight: 700,
+        },
+      }}
+    />
   )
 }
 
 export function Select({
   label,
   values,
+  placeholder,
 }: {
   label: string
   values: Array<{ label: string; value: string }>
@@ -104,24 +109,21 @@ export function Select({
   const errors = useStore(field.store, (state) => state.meta.errors)
 
   return (
-    <div>
-      <label htmlFor={label} className="block font-bold mb-1 text-xl">
-        {label}
-      </label>
-      <select
-        name={field.name}
-        value={field.state.value}
-        onBlur={field.handleBlur}
-        onChange={(e) => field.handleChange(e.target.value)}
-        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        {values.map((value) => (
-          <option key={value.value} value={value.value}>
-            {value.label}
-          </option>
-        ))}
-      </select>
-      {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
-    </div>
+    <MantineSelect
+      label={label}
+      placeholder={placeholder}
+      value={field.state.value}
+      onBlur={field.handleBlur}
+      onChange={(value) => field.handleChange(value || '')}
+      data={values.map((v) => ({ label: v.label, value: v.value }))}
+      error={field.state.meta.isTouched && errors.length > 0 ? errors[0] : undefined}
+      size="md"
+      styles={{
+        label: {
+          fontSize: '1.25rem',
+          fontWeight: 700,
+        },
+      }}
+    />
   )
 }
