@@ -1,0 +1,23 @@
+{
+  "name": "aufy-client",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "axios": "^1.13.2"
+  },
+  "devDependencies": {
+    "@rushstack/eslint-patch": "^1.15.0",
+    "@types/node": "^20.9.2",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
+    "eslint": "^8.57.1",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "src/**/*"
+  ]
+}
